@@ -10,4 +10,11 @@
     <style name="alertDialogue1" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
         <item name="android:textColor">@color/CS</item>
     </style>
+
+    <style name="switchButton">
+        <item name="android:layout_width">70dp</item>
+        <item name="android:layout_height">70dp</item>
+        <item name="android:layout_margin">20dp</item>
+        <item name="android:background">@drawable/button_1</item>
+    </style>
 </resources>

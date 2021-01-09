@@ -2,23 +2,22 @@ package org.ifaco.mergen
 
 import android.animation.*
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.text.TextUtils
 import android.util.DisplayMetrics
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import java.util.regex.Pattern
 
 @Suppress("unused")
 class Fun {
@@ -53,6 +52,10 @@ class Fun {
 
         fun vis(v: View, b: Boolean = true) {
             v.visibility = if (b) View.VISIBLE else View.GONE
+        }
+
+        fun vish(v: View, b: Boolean = true) {
+            v.visibility = if (b) View.VISIBLE else View.INVISIBLE
         }
 
         fun drown(v: View, bb: Boolean = false) {
@@ -118,24 +121,11 @@ class Fun {
             else v.vibrate(dur)
         }
 
-        fun encode(uriString: String): String {
-            if (TextUtils.isEmpty(uriString)) return uriString
-            val allowedUrlCharacters = Pattern.compile(
-                "([A-Za-z0-9_.~:/?\\#\\[\\]@!$&'()*+,;" + "=-]|%[0-9a-fA-F]{2})+"
-            )
-            val matcher = allowedUrlCharacters.matcher(uriString)
-            var validUri: String? = null
-            if (matcher.find()) validUri = matcher.group()
-            if (TextUtils.isEmpty(validUri) || uriString.length == validUri!!.length)
-                return uriString
+        fun permGranted(perm: String) =
+            ActivityCompat.checkSelfPermission(c, perm) == PackageManager.PERMISSION_GRANTED
 
-            val uri = Uri.parse(uriString)
-            val uriBuilder = Uri.Builder().scheme(uri.scheme).authority(uri.authority)
-            for (path in uri.pathSegments) uriBuilder.appendPath(path)
-            for (key in uri.queryParameterNames)
-                uriBuilder.appendQueryParameter(key, uri.getQueryParameter(key))
-            return uriBuilder.build().toString()
-        }
+        fun permResult(grantResults: IntArray) =
+            grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
     }
 
     enum class Fonts(val path: String) {
