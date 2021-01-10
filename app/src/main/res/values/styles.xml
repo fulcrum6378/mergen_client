@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="match">
         <item name="layout_constraintTop_toTopOf">parent</item>
         <item name="layout_constraintLeft_toLeftOf">parent</item>
@@ -11,10 +12,27 @@
         <item name="android:textColor">@color/CS</item>
     </style>
 
-    <style name="switchButton">
-        <item name="android:layout_width">70dp</item>
-        <item name="android:layout_height">70dp</item>
-        <item name="android:layout_margin">20dp</item>
+
+    <!-- Panel -->
+    <style name="fakeRadius">
+        <item name="android:layout_width">15dp</item>
+        <item name="android:layout_height">15dp</item>
+        <item name="android:src">@drawable/fake_radius_1</item>
+    </style>
+
+    <style name="bnvButton">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
         <item name="android:background">@drawable/button_1</item>
+        <item name="layout_constraintWidth_percent">0.5</item>
+    </style>
+
+    <style name="bnvButtonIV" parent="match">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:adjustViewBounds">true</item>
+        <item name="layout_constraintBottom_toBottomOf">parent</item>
+        <item name="layout_constraintTop_toTopOf">parent</item>
+        <item name="layout_constraintHeight_percent">0.47</item>
     </style>
 </resources>

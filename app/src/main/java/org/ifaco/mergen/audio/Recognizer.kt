@@ -56,7 +56,7 @@ class Recognizer(that: Panel) {
                 res?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
                     ?.forEach { s -> state = understand(s) }
                 when (state) {
-                    0, 3 -> handler?.obtainMessage(Panel.Action.HEARD.ordinal)
+                    0, 3 -> handler?.obtainMessage(Panel.Action.HEARD.ordinal)?.sendToTarget()
                     1, 2 -> {
                         Fun.drown(hearIcon, true)
                         if (state == 2 && continuous) continueIt(waitingView)

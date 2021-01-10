@@ -4,6 +4,8 @@ import android.Manifest
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -17,10 +19,11 @@ import org.ifaco.mergen.Panel.Companion.handler
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-class Capture(val that: AppCompatActivity, val previewView: PreviewView) {
+class Previewer(val that: AppCompatActivity, val previewView: PreviewView) {
     lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     lateinit var cameraProvider: ProcessCameraProvider
     lateinit var preview: Preview
+    lateinit var imageCapture: ImageCapture
     lateinit var cameraSelector: CameraSelector
     var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     var previewing = false
@@ -50,7 +53,10 @@ class Capture(val that: AppCompatActivity, val previewView: PreviewView) {
                 cameraSelector = CameraSelector.Builder()
                     .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                     .build()
-                cameraProvider.bindToLifecycle(that, cameraSelector, preview)
+                imageCapture = ImageCapture.Builder()
+                    .setTargetRotation(that.window.decorView.display.rotation)
+                    .build()
+                cameraProvider.bindToLifecycle(that, cameraSelector, imageCapture, preview)
                 // "CameraSelector.DEFAULT_BACK_CAMERA" instead of "cameraSelector"
             } catch (exc: Exception) {
                 Toast.makeText(c, exc.javaClass.name, Toast.LENGTH_SHORT).show()
@@ -64,6 +70,17 @@ class Capture(val that: AppCompatActivity, val previewView: PreviewView) {
         previewing = false
         preview.setSurfaceProvider(null)
         previewView.removeAllViews()
+    }
+
+    fun capture() {
+        /*val outputFileOptions = ImageCapture.OutputFileOptions.Builder(File(...)).build()
+        imageCapture.takePicture(outputFileOptions, cameraExecutor,
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onError(error: ImageCaptureException) {
+                }
+                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                }
+            })*/
     }
 
     fun destroy() {

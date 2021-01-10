@@ -6,6 +6,10 @@
         <variable
             name="sSayHint"
             type="String" />
+
+        <variable
+            name="fEyeAlpha"
+            type="Float" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -21,125 +25,170 @@
 
         <androidx.camera.view.PreviewView
             android:id="@+id/preview"
-            style="@style/match"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            app:layout_constraintBottom_toTopOf="@id/bnv"
+            app:layout_constraintTop_toBottomOf="@id/say" />
 
         <EditText
             android:id="@+id/say"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/field_1"
+            android:background="@color/CPO"
             android:hint="@{sSayHint}"
             android:inputType="textMultiLine|textAutoComplete"
+            android:letterSpacing="0.03"
             android:maxLength="1000"
             android:paddingStart="16dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="54dp"
-            android:paddingBottom="10dp"
+            android:paddingTop="17dp"
+            android:paddingEnd="57dp"
+            android:paddingBottom="17dp"
             android:textColor="@color/CS"
             android:textColorHint="@color/CSV"
             android:textSize="20sp"
-            app:layout_constraintBottom_toTopOf="@id/resSV"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintWidth_percent="0.75" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/clear"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginEnd="5dp"
+            android:layout_marginEnd="8dp"
             android:adjustViewBounds="true"
             android:background="@drawable/hover_1"
             android:padding="11dp"
             android:src="@drawable/close_1"
+            android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="@id/say"
             app:layout_constraintEnd_toEndOf="@id/say"
             app:layout_constraintTop_toTopOf="@id/say" />
 
-        <ScrollView
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/resSV"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:background="@color/response"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/say"
-            app:layout_constraintWidth_percent="0.75">
+            app:layout_constraintBottom_toTopOf="@id/bnv"
+            app:layout_constraintHeight_percent="0.18">
 
             <TextView
                 android:id="@+id/response"
-                android:layout_width="match_parent"
+                style="@style/match"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAlignment="center"
                 android:textColor="@color/CPO"
                 android:textSize="22sp" />
-        </ScrollView>
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/hear"
-            style="@style/switchButton"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
-
-            <ImageView
-                android:id="@+id/waiting"
-                style="@style/match"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:alpha="0"
-                android:padding="2dp"
-                android:src="@drawable/circle_cpo"
-                android:visibility="gone"
-                app:layout_constraintHeight_percent="0.86"
-                app:layout_constraintWidth_percent="0.86" />
-
-            <ImageView
-                android:id="@+id/hearIcon"
-                style="@style/match"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:src="@drawable/record_1"
-                app:layout_constraintHeight_percent="0.45"
-                app:layout_constraintWidth_percent="0.45" />
-
-            <com.airbnb.lottie.LottieAnimationView
-                android:id="@+id/hearing"
-                style="@style/match"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:scaleX="0"
-                android:scaleY="0"
-                android:visibility="gone"
-                app:layout_constraintHeight_percent="0.5"
-                app:layout_constraintWidth_percent="0.5"
-                app:lottie_autoPlay="false"
-                app:lottie_colorFilter="@color/CS"
-                app:lottie_loop="true"
-                app:lottie_rawRes="@raw/hearing_1" />
-
-            <ImageView
-                android:id="@+id/sendingIcon"
-                style="@style/match"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:scaleX="0"
-                android:scaleY="0"
-                android:src="@drawable/indicator_1"
-                android:visibility="gone"
-                app:layout_constraintHeight_percent="0.45"
-                app:layout_constraintWidth_percent="0.45" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/see"
-            style="@style/switchButton"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent">
 
+        <ImageView
+            style="@style/fakeRadius"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/say" />
+
+        <ImageView
+            style="@style/fakeRadius"
+            android:rotation="90"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/say" />
+
+        <ImageView
+            style="@style/fakeRadius"
+            android:rotation="-90"
+            app:layout_constraintBottom_toTopOf="@id/bnv"
+            app:layout_constraintLeft_toLeftOf="parent" />
+
+        <ImageView
+            style="@style/fakeRadius"
+            android:rotation="180"
+            app:layout_constraintBottom_toTopOf="@id/bnv"
+            app:layout_constraintRight_toRightOf="parent" />
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/bnv"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:background="@color/CPO"
+            app:layout_constraintBottom_toBottomOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/hear"
+                style="@style/bnvButton"
+                app:layout_constraintEnd_toStartOf="@id/see"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <ImageView
+                    android:id="@+id/waiting"
+                    style="@style/match"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:alpha="0"
+                    android:padding="2dp"
+                    android:src="@drawable/circle_cpo"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="@id/hearIcon"
+                    app:layout_constraintLeft_toLeftOf="@id/hearIcon"
+                    app:layout_constraintRight_toRightOf="@id/hearIcon"
+                    app:layout_constraintTop_toTopOf="@id/hearIcon" />
+
+                <ImageView
+                    android:id="@+id/hearIcon"
+                    style="@style/bnvButtonIV"
+                    android:src="@drawable/record_1" />
+
+                <com.airbnb.lottie.LottieAnimationView
+                    android:id="@+id/hearing"
+                    style="@style/match"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:scaleX="0"
+                    android:scaleY="0"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="@id/hearIcon"
+                    app:layout_constraintHeight_percent="0.5"
+                    app:layout_constraintLeft_toLeftOf="@id/hearIcon"
+                    app:layout_constraintRight_toRightOf="@id/hearIcon"
+                    app:layout_constraintTop_toTopOf="@id/hearIcon"
+                    app:layout_constraintWidth_percent="0.5"
+                    app:lottie_autoPlay="false"
+                    app:lottie_colorFilter="@color/CS"
+                    app:lottie_loop="true"
+                    app:lottie_rawRes="@raw/hearing_1" />
+
+                <ImageView
+                    android:id="@+id/sendingIcon"
+                    style="@style/match"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:scaleX="0"
+                    android:scaleY="0"
+                    android:src="@drawable/indicator_1"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="@id/hearIcon"
+                    app:layout_constraintHeight_percent="0.5"
+                    app:layout_constraintLeft_toLeftOf="@id/hearIcon"
+                    app:layout_constraintRight_toRightOf="@id/hearIcon"
+                    app:layout_constraintTop_toTopOf="@id/hearIcon"
+                    app:layout_constraintWidth_percent="0.5" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/see"
+                style="@style/bnvButton"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/hear">
+
+                <ImageView
+                    android:id="@+id/seeIV"
+                    style="@style/bnvButtonIV"
+                    android:alpha="@{fEyeAlpha}"
+                    android:src="@drawable/horus_eye_1"
+                    app:layout_constraintHeight_percent="0.55" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

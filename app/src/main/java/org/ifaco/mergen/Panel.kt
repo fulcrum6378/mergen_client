@@ -5,6 +5,7 @@ import android.os.*
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.addTextChangedListener
 import com.google.android.gms.location.*
 import org.ifaco.mergen.Client.Companion.bSending
 import org.ifaco.mergen.Fun.Companion.c
@@ -12,13 +13,14 @@ import org.ifaco.mergen.Fun.Companion.cf
 import org.ifaco.mergen.Fun.Companion.drown
 import org.ifaco.mergen.Fun.Companion.fBold
 import org.ifaco.mergen.Fun.Companion.fRegular
+import org.ifaco.mergen.Fun.Companion.fade
 import org.ifaco.mergen.Fun.Companion.permResult
 import org.ifaco.mergen.Fun.Companion.vis
 import org.ifaco.mergen.Fun.Companion.vish
 import org.ifaco.mergen.audio.Recognizer
 import org.ifaco.mergen.audio.Recorder
 import org.ifaco.mergen.audio.Speaker
-import org.ifaco.mergen.camera.Capture
+import org.ifaco.mergen.camera.Previewer
 import org.ifaco.mergen.databinding.PanelBinding
 import org.ifaco.mergen.more.DoubleClickListener
 import java.util.*
@@ -27,12 +29,15 @@ class Panel : AppCompatActivity() {
     lateinit var b: PanelBinding
     val model: Model by viewModels()
     val typeDur = 87L
+    val resHideAfter = 20000L
+    val seeDisabled = 0.73f
 
     companion object {
         lateinit var rec: Recognizer
-        lateinit var cap: Capture
+        lateinit var pre: Previewer
         var handler: Handler? = null
     }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,10 +50,14 @@ class Panel : AppCompatActivity() {
         handler = object : Handler(Looper.getMainLooper()) {
             override fun handleMessage(msg: Message) {
                 when (msg.what) {
-                    Action.CANT_HEAR.ordinal -> vis(b.hear, false)
+                    Action.CANT_HEAR.ordinal -> {
+                        b.hear.setOnClickListener(null)
+                        b.hear.setOnLongClickListener(null)
+                        b.hearIcon.alpha = 0.25f
+                    }
                     Action.HEAR.ordinal -> rec.hear(b.hearIcon, b.hearing, b.waiting)
                     Action.HEARD.ordinal -> Client(
-                        this@Panel, 3, b.say, b.waiting, b.sendingIcon, b.hearIcon, model
+                        this@Panel, b.say, b.waiting, b.sendingIcon, b.hearIcon, model
                     ).apply {
                         if (!result) {
                             drown(hearIcon, true)
@@ -56,7 +65,9 @@ class Panel : AppCompatActivity() {
                         }
                     }
                     Action.CANT_SEE.ordinal -> {
-                        vis(b.see, false)
+                        b.see.setOnClickListener(null)
+                        b.see.setOnLongClickListener(null)
+                        b.seeIV.alpha = 0.25f
                         vis(b.preview, false)
                     }
                     Action.WRITE.ordinal -> msg.obj?.let { b.say.setText("$it") }
@@ -74,7 +85,7 @@ class Panel : AppCompatActivity() {
         //Nav.locationPermission()
         Speaker.init()
         rec = Recognizer(this)
-        cap = Capture(this, b.preview)
+        pre = Previewer(this, b.preview)
 
         // Listening
         b.sSayHint = "....."// can be changed later but won't survive a configuration change
@@ -83,14 +94,18 @@ class Panel : AppCompatActivity() {
             typer?.cancel()
             typer = null
             b.response.text = ""
+            resHider?.cancel()
+            resHider = null
+            fade(b.resSV)
             respond(0)
         })
         b.say.typeface = fRegular
-        b.body.setOnClickListener(object : DoubleClickListener() {
+        b.say.addTextChangedListener { vish(b.clear, it.toString().isNotEmpty()) }
+        b.preview.setOnClickListener(object : DoubleClickListener() {
             override fun onDoubleClick() {
                 if (bSending || rec.listening) return
                 if (rec.continuer != null) rec.doNotContinue(b.waiting)
-                Client(this@Panel, 3, b.say, b.waiting, b.sendingIcon, b.hearIcon, model).apply {
+                Client(this@Panel, b.say, b.waiting, b.sendingIcon, b.hearIcon, model).apply {
                     if (!result) {
                         drown(b.hearIcon, true)
                         if (rec.continuous) rec.continueIt(b.waiting)
@@ -98,6 +113,7 @@ class Panel : AppCompatActivity() {
                 }
             }
         })
+
 
         // Hearing
         b.hearIcon.drawable.apply { colorFilter = cf() }
@@ -118,10 +134,16 @@ class Panel : AppCompatActivity() {
         }
 
         // Seeing
+        b.fEyeAlpha = if (pre.previewing) 1f else seeDisabled
         b.see.setOnClickListener {
-            if (!cap.previewing) cap.start()
-            else cap.pause()
-            vish(b.preview, cap.previewing)
+            if (!pre.previewing) pre.start()
+            else pre.pause()
+            vish(b.preview, pre.previewing)
+            b.fEyeAlpha = if (pre.previewing) 1f else seeDisabled
+        }
+        b.see.setOnLongClickListener {
+            pre.capture()
+            true
         }
 
         // Sending
@@ -135,7 +157,7 @@ class Panel : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        cap.destroy()
+        pre.destroy()
         rec.destroy()
         Speaker.destroy()
         handler = null
@@ -165,8 +187,18 @@ class Panel : AppCompatActivity() {
 
     var resTyper = ""
     var typer: CountDownTimer? = null
+    var resHider: CountDownTimer? = null
     fun respond(which: Int) {
-        if (resTyper.length <= which) return
+        if (resTyper.length <= which) {
+            resHider = object : CountDownTimer(resHideAfter, resHideAfter) {
+                override fun onTick(millisUntilFinished: Long) {}
+                override fun onFinish() {
+                    fade(b.resSV, false)
+                    b.response.text = ""
+                }
+            }.start()
+            return
+        }
         b.response.text = b.response.text.toString().plus(resTyper[which])
         typer = object : CountDownTimer(typeDur, typeDur) {
             override fun onTick(millisUntilFinished: Long) {}

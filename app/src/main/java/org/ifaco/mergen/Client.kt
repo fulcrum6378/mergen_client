@@ -17,7 +17,6 @@ import java.util.regex.Pattern
 
 class Client(
     val that: Panel,
-    state: Int,
     val et: EditText,
     val waitingView: View,
     var sendingIcon: View,
@@ -25,7 +24,7 @@ class Client(
     val model: Model,
     var said: String = et.text.toString()
 ) {
-    var result = false
+    var result = true
 
     companion object {
         var bSending = false
@@ -33,50 +32,48 @@ class Client(
     }
 
     init {
+        result = true
         //if (here == null) result = false
         if (said == "" || bSending) result = false
-        var toLearn = said.startsWith("learn ")
-        if (toLearn && state != 3) {
-            Speaker.pronounce(said)
-            result = false
-        }
-        sending(true)
-        var got = (if (!toLearn) "t=$said" else "l=${said.substring(6)}")
-        if (Nav.here != null) got = got.plus("&y=${Nav.here!!.latitude}&x=${Nav.here!!.longitude}")
-        Volley.newRequestQueue(Fun.c).add(
-            StringRequest(Request.Method.GET, encode("http://82.102.10.134/?$got"), { res ->
-                sending(false)
-                var pronouncable = ""
-                var toastable = ""
-                var traceback = false
-                val splitted = res.trim().split("\n")
-                splitted.mapIndexed { i, it ->
-                    if (traceback) return@mapIndexed
-                    if (it.startsWith("Traceback ")) {
-                        AlertDialogue.alertDialogue1(that, "Traceback", res)
-                        traceback = true
-                        Fun.shake()
-                    } else if (!it.startsWith("{'vrb'"))
-                        pronouncable = pronouncable.plus(it)
-                            .plus(if (i < splitted.size - 1) "\n" else "")
-                    else toastable = toastable.plus(it).plus("\n")
-                }
-                if (pronouncable != "") Speaker.pronounce(pronouncable)
-                else Speaker.pronounce(said)
-                model.mean.value = toastable
-                model.res.value = pronouncable
-                if (rec.continuous) rec.continueIt(waitingView)
-            }, {
-                sending(false)
-                Toast.makeText(Fun.c, "ERROR: $it", Toast.LENGTH_SHORT).show()
-                if (rec.continuous) rec.continueIt(waitingView)
-            }).setTag("talk").setRetryPolicy(
-                DefaultRetryPolicy(
-                    rec.conDur.toInt(), 3, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        if (result) {
+            sending(true)
+            var got = "t=$said"
+            if (Nav.here != null) got = got
+                .plus("&y=${Nav.here!!.latitude}&x=${Nav.here!!.longitude}")
+            Volley.newRequestQueue(Fun.c).add(
+                StringRequest(Request.Method.GET, encode("http://82.102.10.134/?$got"), { res ->
+                    sending(false)
+                    var pronouncable = ""
+                    var toastable = ""
+                    var traceback = false
+                    val splitted = res.trim().split("\n")
+                    splitted.mapIndexed { i, it ->
+                        if (traceback) return@mapIndexed
+                        if (it.startsWith("Traceback ")) {
+                            AlertDialogue.alertDialogue1(that, "Traceback", res)
+                            traceback = true
+                            Fun.shake()
+                        } else if (!it.startsWith("{'vrb'"))
+                            pronouncable = pronouncable.plus(it)
+                                .plus(if (i < splitted.size - 1) "\n" else "")
+                        else toastable = toastable.plus(it).plus("\n")
+                    }
+                    if (pronouncable != "") Speaker.pronounce(pronouncable)
+                    else Speaker.pronounce(said)
+                    model.mean.value = toastable
+                    model.res.value = pronouncable
+                    if (rec.continuous) rec.continueIt(waitingView)
+                }, {
+                    sending(false)
+                    Toast.makeText(Fun.c, "ERROR: $it", Toast.LENGTH_SHORT).show()
+                    if (rec.continuous) rec.continueIt(waitingView)
+                }).setTag("talk").setRetryPolicy(
+                    DefaultRetryPolicy(
+                        rec.conDur.toInt(), 3, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+                    )
                 )
             )
-        )
-        result = true
+        }
     }
 
     fun sending(bb: Boolean) {
