@@ -10,8 +10,8 @@ import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import org.ifaco.mergen.Panel.Companion.handler
 import org.ifaco.mergen.Panel.Companion.rec
-import org.ifaco.mergen.audio.Speaker
 import org.ifaco.mergen.more.AlertDialogue
 import java.util.regex.Pattern
 
@@ -43,25 +43,21 @@ class Client(
             Volley.newRequestQueue(Fun.c).add(
                 StringRequest(Request.Method.GET, encode("http://82.102.10.134/?$got"), { res ->
                     sending(false)
-                    var pronouncable = ""
-                    var toastable = ""
-                    var traceback = false
-                    val splitted = res.trim().split("\n")
-                    splitted.mapIndexed { i, it ->
-                        if (traceback) return@mapIndexed
-                        if (it.startsWith("Traceback ")) {
-                            AlertDialogue.alertDialogue1(that, "Traceback", res)
-                            traceback = true
-                            Fun.shake()
-                        } else if (!it.startsWith("{'vrb'"))
-                            pronouncable = pronouncable.plus(it)
-                                .plus(if (i < splitted.size - 1) "\n" else "")
-                        else toastable = toastable.plus(it).plus("\n")
-                    }
-                    if (pronouncable != "") Speaker.pronounce(pronouncable)
-                    else Speaker.pronounce(said)
-                    model.mean.value = toastable
-                    model.res.value = pronouncable
+                    if (res.startsWith("Traceback "))
+                        AlertDialogue.alertDialogue1(that, "Traceback", res)
+                    /*else try {
+                        val tempPro = File.createTempFile("response", "wav", that.cacheDir)
+                        tempPro.deleteOnExit()
+                        FileOutputStream(tempPro).apply {
+                            write(Base64.decode(res, Base64.DEFAULT))
+                            handler?.obtainMessage(Panel.Action.PRO.ordinal, tempPro)?.sendToTarget()
+                            close()
+                        }
+                    } catch (e: Exception) {
+                        Toast.makeText(Fun.c, "ERROR: $e", Toast.LENGTH_SHORT).show()
+                    }*/
+                    handler?.obtainMessage(Panel.Action.PRO.ordinal, res)?.sendToTarget()
+                    model.res.value = said
                     if (rec.continuous) rec.continueIt(waitingView)
                 }, {
                     sending(false)

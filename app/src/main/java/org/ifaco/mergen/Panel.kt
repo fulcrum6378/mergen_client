@@ -1,14 +1,13 @@
 package org.ifaco.mergen
 
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.*
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.addTextChangedListener
 import com.google.android.gms.location.*
 import org.ifaco.mergen.Client.Companion.bSending
-import org.ifaco.mergen.Fun.Companion.c
 import org.ifaco.mergen.Fun.Companion.cf
 import org.ifaco.mergen.Fun.Companion.drown
 import org.ifaco.mergen.Fun.Companion.fBold
@@ -19,7 +18,6 @@ import org.ifaco.mergen.Fun.Companion.vis
 import org.ifaco.mergen.Fun.Companion.vish
 import org.ifaco.mergen.audio.Recognizer
 import org.ifaco.mergen.audio.Recorder
-import org.ifaco.mergen.audio.Speaker
 import org.ifaco.mergen.camera.Previewer
 import org.ifaco.mergen.databinding.PanelBinding
 import org.ifaco.mergen.more.DoubleClickListener
@@ -36,6 +34,7 @@ class Panel : AppCompatActivity() {
         lateinit var rec: Recognizer
         lateinit var pre: Previewer
         var handler: Handler? = null
+        lateinit var mp: MediaPlayer
     }
 
 
@@ -72,6 +71,13 @@ class Panel : AppCompatActivity() {
                     }
                     Action.WRITE.ordinal -> msg.obj?.let { b.say.setText("$it") }
                     Action.CLEAN.ordinal -> clear()
+                    Action.PRO.ordinal -> {
+                        mp.reset()
+                        // FileInputStream(msg.obj as File).apply { mp.setDataSource(fd) }
+                        mp.setDataSource(msg.obj as String)
+                        mp.prepare()
+                        mp.start()
+                    }
                     Action.EXIT.ordinal -> {
                         moveTaskToBack(true)
                         Process.killProcess(Process.myPid())
@@ -83,9 +89,9 @@ class Panel : AppCompatActivity() {
 
         // Initializations
         //Nav.locationPermission()
-        Speaker.init()
         rec = Recognizer(this)
         pre = Previewer(this, b.preview)
+        mp = MediaPlayer()
 
         // Listening
         b.sSayHint = "....."// can be changed later but won't survive a configuration change
@@ -101,7 +107,7 @@ class Panel : AppCompatActivity() {
         })
         b.say.typeface = fRegular
         b.say.addTextChangedListener { vish(b.clear, it.toString().isNotEmpty()) }
-        b.preview.setOnClickListener(object : DoubleClickListener() {
+        b.body.setOnClickListener(object : DoubleClickListener() {
             override fun onDoubleClick() {
                 if (bSending || rec.listening) return
                 if (rec.continuer != null) rec.doNotContinue(b.waiting)
@@ -148,10 +154,6 @@ class Panel : AppCompatActivity() {
 
         // Sending
         b.sendingIcon.drawable.apply { colorFilter = cf() }
-        b.response.setOnClickListener {
-            if (model.res.value == "") return@setOnClickListener
-            Toast.makeText(c, model.mean.value, Toast.LENGTH_LONG).show()
-        }
         b.clear.setOnClickListener { clear() }
         b.response.typeface = fBold
     }
@@ -159,7 +161,7 @@ class Panel : AppCompatActivity() {
     override fun onDestroy() {
         pre.destroy()
         rec.destroy()
-        Speaker.destroy()
+        mp.release()
         handler = null
         super.onDestroy()
     }
@@ -215,5 +217,5 @@ class Panel : AppCompatActivity() {
     }
 
 
-    enum class Action { CANT_HEAR, HEAR, HEARD, CANT_SEE, WRITE, CLEAN, EXIT }
+    enum class Action { CANT_HEAR, HEAR, HEARD, CANT_SEE, WRITE, PRO, CLEAN, EXIT }
 }
