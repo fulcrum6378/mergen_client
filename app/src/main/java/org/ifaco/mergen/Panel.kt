@@ -2,6 +2,7 @@ package org.ifaco.mergen
 
 import android.content.Intent
 import android.media.MediaPlayer
+import android.net.Uri
 import android.os.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -21,6 +22,7 @@ import org.ifaco.mergen.audio.Recorder
 import org.ifaco.mergen.camera.Previewer
 import org.ifaco.mergen.databinding.PanelBinding
 import org.ifaco.mergen.more.DoubleClickListener
+import java.lang.Exception
 import java.util.*
 
 class Panel : AppCompatActivity() {
@@ -34,7 +36,7 @@ class Panel : AppCompatActivity() {
         lateinit var rec: Recognizer
         lateinit var pre: Previewer
         var handler: Handler? = null
-        lateinit var mp: MediaPlayer
+        var mp: MediaPlayer? = null
     }
 
 
@@ -72,11 +74,10 @@ class Panel : AppCompatActivity() {
                     Action.WRITE.ordinal -> msg.obj?.let { b.say.setText("$it") }
                     Action.CLEAN.ordinal -> clear()
                     Action.PRO.ordinal -> {
-                        mp.reset()
-                        // FileInputStream(msg.obj as File).apply { mp.setDataSource(fd) }
-                        mp.setDataSource(msg.obj as String)
-                        mp.prepare()
-                        mp.start()
+                        mp = MediaPlayer.create(this@Panel, msg.obj as Uri)
+                        // IOException: Prepare failed.: status=0x1
+                        mp?.setOnPreparedListener { mp?.start() }
+                        mp?.setOnCompletionListener { mp?.release(); mp = null }
                     }
                     Action.EXIT.ordinal -> {
                         moveTaskToBack(true)
@@ -161,7 +162,11 @@ class Panel : AppCompatActivity() {
     override fun onDestroy() {
         pre.destroy()
         rec.destroy()
-        mp.release()
+        try {
+            mp?.release()
+        } catch (ignored: Exception) {
+        }
+        mp = null
         handler = null
         super.onDestroy()
     }
@@ -169,6 +174,7 @@ class Panel : AppCompatActivity() {
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<String?>, grantResults: IntArray
     ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             Nav.reqLocPer -> {
                 if (permResult(grantResults)) Nav.locationSettings(this)

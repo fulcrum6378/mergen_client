@@ -3,16 +3,21 @@ package org.ifaco.mergen
 import android.animation.ObjectAnimator
 import android.net.Uri
 import android.text.TextUtils
+import android.util.Base64
 import android.view.View
 import android.widget.EditText
 import android.widget.Toast
+import androidx.core.net.toUri
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
+import org.ifaco.mergen.Fun.Companion.c
 import org.ifaco.mergen.Panel.Companion.handler
 import org.ifaco.mergen.Panel.Companion.rec
 import org.ifaco.mergen.more.AlertDialogue
+import java.io.File
+import java.io.FileOutputStream
 import java.util.regex.Pattern
 
 class Client(
@@ -40,30 +45,27 @@ class Client(
             var got = "t=$said"
             if (Nav.here != null) got = got
                 .plus("&y=${Nav.here!!.latitude}&x=${Nav.here!!.longitude}")
-            Volley.newRequestQueue(Fun.c).add(
+            Volley.newRequestQueue(c).add(
                 StringRequest(Request.Method.GET, encode("http://82.102.10.134/?$got"), { res ->
                     sending(false)
                     if (res.startsWith("Traceback "))
                         AlertDialogue.alertDialogue1(that, "Traceback", res)
-                    /*else try {
-                        val tempPro = File.createTempFile("response", "wav", that.cacheDir)
-                        tempPro.deleteOnExit()
-                        FileOutputStream(tempPro).apply {
+                    else {
+                        val temp = File(c.cacheDir, "response.wav")
+                        FileOutputStream(temp).apply {
                             write(Base64.decode(res, Base64.DEFAULT))
-                            handler?.obtainMessage(Panel.Action.PRO.ordinal, tempPro)?.sendToTarget()
                             close()
                         }
-                    } catch (e: Exception) {
-                        Toast.makeText(Fun.c, "ERROR: $e", Toast.LENGTH_SHORT).show()
-                    }*/
-                    handler?.obtainMessage(Panel.Action.PRO.ordinal, res)?.sendToTarget()
+                        handler?.obtainMessage(Panel.Action.PRO.ordinal, temp.toUri())?.sendToTarget()
+                        temp.deleteOnExit()
+                    }
                     model.res.value = said
                     if (rec.continuous) rec.continueIt(waitingView)
                 }, {
                     sending(false)
-                    Toast.makeText(Fun.c, "ERROR: $it", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(c, "Connection failed: $it", Toast.LENGTH_SHORT).show()
                     if (rec.continuous) rec.continueIt(waitingView)
-                }).setTag("talk").setRetryPolicy(
+                }).setShouldCache(false).setTag("talk").setRetryPolicy(
                     DefaultRetryPolicy(
                         rec.conDur.toInt(), 3, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
                     )
