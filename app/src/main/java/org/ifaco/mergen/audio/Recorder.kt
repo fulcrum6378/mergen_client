@@ -16,4 +16,6 @@ class Recorder {
             else ActivityCompat.requestPermissions(that, arrayOf(recPerm), reqRecPer)
         }
     }
+
+    // init {}
 }

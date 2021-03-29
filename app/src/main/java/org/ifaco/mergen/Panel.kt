@@ -35,6 +35,7 @@ class Panel : AppCompatActivity() {
     companion object {
         lateinit var rec: Recognizer
         lateinit var pre: Previewer
+        lateinit var mic: Recorder
         var handler: Handler? = null
         var mp: MediaPlayer? = null
     }
@@ -56,7 +57,10 @@ class Panel : AppCompatActivity() {
                         b.hear.setOnLongClickListener(null)
                         b.hearIcon.alpha = 0.25f
                     }
-                    Action.HEAR.ordinal -> rec.hear(b.hearIcon, b.hearing, b.waiting)
+                    Action.HEAR.ordinal -> {
+                        rec.hear(b.hearIcon, b.hearing, b.waiting)
+                        mic = Recorder()
+                    }
                     Action.HEARD.ordinal -> Client(
                         this@Panel, b.say, b.waiting, b.sendingIcon, b.hearIcon, model
                     ).apply {
@@ -75,7 +79,6 @@ class Panel : AppCompatActivity() {
                     Action.CLEAN.ordinal -> clear()
                     Action.PRO.ordinal -> {
                         mp = MediaPlayer.create(this@Panel, msg.obj as Uri)
-                        // IOException: Prepare failed.: status=0x1
                         mp?.setOnPreparedListener { mp?.start() }
                         mp?.setOnCompletionListener { mp?.release(); mp = null }
                     }
@@ -92,7 +95,7 @@ class Panel : AppCompatActivity() {
         //Nav.locationPermission()
         rec = Recognizer(this)
         pre = Previewer(this, b.preview)
-        mp = MediaPlayer()
+        Recorder.recordPermission(this)
 
         // Listening
         b.sSayHint = "....."// can be changed later but won't survive a configuration change
