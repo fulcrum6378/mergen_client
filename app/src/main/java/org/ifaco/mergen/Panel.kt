@@ -57,16 +57,21 @@ class Panel : AppCompatActivity() {
 
         // Connect to Mergen Server
         Client(this)
+        b.preview.setOnLongClickListener {
+            if (!vis.recording) vis.resume()
+            else vis.pause()
+            true
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        vis.start() // pre.capture()
+        vis.start()
     }
 
     override fun onPause() {
         super.onPause()
-        vis.pause()
+        vis.stop()
     }
 
     override fun onDestroy() {
