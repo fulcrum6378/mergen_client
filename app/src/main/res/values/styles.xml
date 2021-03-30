@@ -15,8 +15,8 @@
 
     <!-- Panel -->
     <style name="fakeRadius">
-        <item name="android:layout_width">15dp</item>
-        <item name="android:layout_height">15dp</item>
+        <item name="android:layout_width">20dp</item>
+        <item name="android:layout_height">20dp</item>
         <item name="android:src">@drawable/fake_radius_1</item>
     </style>
 

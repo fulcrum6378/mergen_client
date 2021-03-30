@@ -1,35 +1,28 @@
 package org.ifaco.mergen
 
+import android.annotation.SuppressLint
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.addTextChangedListener
-import org.ifaco.mergen.pro.Client.Companion.bSending
-import org.ifaco.mergen.Fun.Companion.fBold
-import org.ifaco.mergen.Fun.Companion.fRegular
-import org.ifaco.mergen.Fun.Companion.fade
 import org.ifaco.mergen.Fun.Companion.permResult
-import org.ifaco.mergen.Fun.Companion.vis
-import org.ifaco.mergen.Fun.Companion.vish
-import org.ifaco.mergen.audio.Recorder
-import org.ifaco.mergen.camera.Previewer
+import org.ifaco.mergen.ear.Recorder
+import org.ifaco.mergen.vis.Previewer
 import org.ifaco.mergen.databinding.PanelBinding
-import org.ifaco.mergen.more.DoubleClickListener
-import org.ifaco.mergen.pro.Client
+import org.ifaco.mergen.pro.Writer
 import java.lang.Exception
 import java.util.*
 
 class Panel : AppCompatActivity() {
     lateinit var b: PanelBinding
     val model: Model by viewModels()
-    val typeDur = 87L
-    val resHideAfter = 20000L
 
     companion object {
-        lateinit var pre: Previewer
+        lateinit var vis: Previewer
         lateinit var ear: Recorder
+        @SuppressLint("StaticFieldLeak")
+        lateinit var pro: Writer
         var handler: Handler? = null
         var mp: MediaPlayer? = null
     }
@@ -47,7 +40,6 @@ class Panel : AppCompatActivity() {
             override fun handleMessage(msg: Message) {
                 when (msg.what) {
                     Action.HEAR.ordinal -> ear = Recorder()
-                    Action.CANT_SEE.ordinal -> vis(b.preview, false)
                     Action.WRITE.ordinal -> msg.obj?.let { b.say.setText("$it") }
                     Action.PRO.ordinal -> {
                         mp = MediaPlayer.create(this@Panel, msg.obj as Uri)
@@ -59,45 +51,23 @@ class Panel : AppCompatActivity() {
         }
 
         // Initializations
-        pre = Previewer(this, b.preview)
+        vis = Previewer(this, b.preview)
         Recorder.recordPermission(this)
-
-        // Listening
-        model.res.observe(this, { s ->
-            resTyper = s
-            typer?.cancel()
-            typer = null
-            b.response.text = ""
-            resHider?.cancel()
-            resHider = null
-            fade(b.resSV)
-            respond(0)
-        })
-        b.say.typeface = fRegular
-        b.say.addTextChangedListener { vish(b.clear, it.toString().isNotEmpty()) }
-        b.body.setOnClickListener(object : DoubleClickListener() {
-            override fun onDoubleClick() {
-                if (!bSending) Client(this@Panel, b.say, model)
-            }
-        })
-
-        // Sending
-        b.clear.setOnClickListener { clear() }
-        b.response.typeface = fBold
+        pro = Writer(this, model, b.body, b.response, b.resSV, b.say, b.clear)
     }
 
     override fun onResume() {
         super.onResume()
-        if (!pre.previewing) pre.start() // pre.capture()
+        vis.start() // pre.capture()
     }
 
     override fun onPause() {
         super.onPause()
-        if (pre.previewing) pre.pause()
+        vis.pause()
     }
 
     override fun onDestroy() {
-        pre.destroy()
+        vis.destroy()
         try {
             mp?.release()
         } catch (ignored: Exception) {
@@ -114,39 +84,10 @@ class Panel : AppCompatActivity() {
         when (requestCode) {
             Recorder.reqRecPer -> if (permResult(grantResults))
                 handler?.obtainMessage(Action.HEAR.ordinal)?.sendToTarget()
+            Previewer.reqCamPer -> if (permResult(grantResults)) vis.granted()
         }
     }
 
 
-    var resTyper = ""
-    var typer: CountDownTimer? = null
-    var resHider: CountDownTimer? = null
-    fun respond(which: Int) {
-        if (resTyper.length <= which) {
-            resHider = object : CountDownTimer(resHideAfter, resHideAfter) {
-                override fun onTick(millisUntilFinished: Long) {}
-                override fun onFinish() {
-                    fade(b.resSV, false)
-                    b.response.text = ""
-                }
-            }.start()
-            return
-        }
-        b.response.text = b.response.text.toString().plus(resTyper[which])
-        typer = object : CountDownTimer(typeDur, typeDur) {
-            override fun onTick(millisUntilFinished: Long) {}
-            override fun onFinish() {
-                respond(which + 1)
-                typer = null
-            }
-        }.apply { start() }
-    }
-
-    fun clear() {
-        b.say.setText("")
-        model.res.value = ""
-    }
-
-
-    enum class Action { HEAR, CANT_SEE, WRITE, PRO }
+    enum class Action { HEAR, WRITE, PRO }
 }

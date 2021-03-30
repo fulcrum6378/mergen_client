@@ -1,4 +1,4 @@
-package org.ifaco.mergen.audio
+package org.ifaco.mergen.ear
 
 import android.Manifest
 import androidx.core.app.ActivityCompat

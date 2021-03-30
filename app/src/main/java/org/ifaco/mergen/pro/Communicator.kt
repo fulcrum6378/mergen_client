@@ -14,12 +14,12 @@ import org.ifaco.mergen.Fun.Companion.c
 import org.ifaco.mergen.Model
 import org.ifaco.mergen.Panel
 import org.ifaco.mergen.Panel.Companion.handler
-import org.ifaco.mergen.more.AlertDialogue
+import org.ifaco.mergen.otr.AlertDialogue
 import java.io.File
 import java.io.FileOutputStream
 import java.util.regex.Pattern
 
-class Client(
+class Communicator(
     val that: Panel,
     val et: EditText,
     val model: Model,

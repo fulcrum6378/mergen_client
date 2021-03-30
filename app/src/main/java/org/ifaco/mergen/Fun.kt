@@ -1,6 +1,7 @@
 package org.ifaco.mergen
 
 import android.animation.*
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -21,6 +22,7 @@ import androidx.core.content.ContextCompat
 
 class Fun {
     companion object {
+        @SuppressLint("StaticFieldLeak")
         lateinit var c: Context
         lateinit var fRegular: Typeface
         lateinit var fBold: Typeface

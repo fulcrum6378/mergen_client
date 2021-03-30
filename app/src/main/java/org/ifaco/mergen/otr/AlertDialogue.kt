@@ -1,4 +1,4 @@
-package org.ifaco.mergen.more
+package org.ifaco.mergen.otr
 
 import android.content.DialogInterface
 import android.graphics.Typeface

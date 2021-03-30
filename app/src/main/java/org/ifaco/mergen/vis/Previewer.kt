@@ -1,4 +1,4 @@
-package org.ifaco.mergen.camera
+package org.ifaco.mergen.vis
 
 import android.Manifest
 import android.widget.Toast
@@ -25,6 +25,7 @@ class Previewer(val that: AppCompatActivity, val previewView: PreviewView) {
     lateinit var imageCapture: ImageCapture
     lateinit var cameraSelector: CameraSelector
     var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+    var canPreview = false
     var previewing = false
 
     companion object {
@@ -32,14 +33,18 @@ class Previewer(val that: AppCompatActivity, val previewView: PreviewView) {
         const val camPerm = Manifest.permission.CAMERA
     }
 
-    init {
-        if (!Fun.permGranted(camPerm))
-            ActivityCompat.requestPermissions(that, arrayOf(camPerm), reqCamPer)
-        // In Panel:
-        //Capture.reqCamPer -> if (permResult(grantResults)) cap.start()
+    fun granted() {
+        canPreview = true
+        this.start()
     }
 
     fun start() {
+        if (!canPreview) {
+            if (!Fun.permGranted(camPerm))
+                ActivityCompat.requestPermissions(that, arrayOf(camPerm), reqCamPer)
+            else granted()
+            return
+        }
         if (previewing) return
         previewing = true
         cameraProviderFuture = ProcessCameraProvider.getInstance(c)
@@ -59,13 +64,13 @@ class Previewer(val that: AppCompatActivity, val previewView: PreviewView) {
                 // "CameraSelector.DEFAULT_BACK_CAMERA" instead of "cameraSelector"
             } catch (exc: Exception) {
                 Toast.makeText(c, exc.javaClass.name, Toast.LENGTH_SHORT).show()
-                handler?.obtainMessage(Panel.Action.CANT_SEE.ordinal)?.sendToTarget()
+                canPreview = false
             }
         }, ContextCompat.getMainExecutor(c))
     }
 
     fun pause() {
-        if (!previewing) return
+        if (!previewing || !canPreview) return
         previewing = false
         preview.setSurfaceProvider(null)
         previewView.removeAllViews()
@@ -83,6 +88,7 @@ class Previewer(val that: AppCompatActivity, val previewView: PreviewView) {
     }
 
     fun destroy() {
+        if (!canPreview) return
         cameraExecutor.shutdown()
     }
 }
