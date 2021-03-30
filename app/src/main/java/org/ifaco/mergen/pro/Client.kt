@@ -1,10 +1,8 @@
-package org.ifaco.mergen
+package org.ifaco.mergen.pro
 
-import android.animation.ObjectAnimator
 import android.net.Uri
 import android.text.TextUtils
 import android.util.Base64
-import android.view.View
 import android.widget.EditText
 import android.widget.Toast
 import androidx.core.net.toUri
@@ -13,8 +11,9 @@ import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import org.ifaco.mergen.Fun.Companion.c
+import org.ifaco.mergen.Model
+import org.ifaco.mergen.Panel
 import org.ifaco.mergen.Panel.Companion.handler
-import org.ifaco.mergen.Panel.Companion.rec
 import org.ifaco.mergen.more.AlertDialogue
 import java.io.File
 import java.io.FileOutputStream
@@ -23,9 +22,6 @@ import java.util.regex.Pattern
 class Client(
     val that: Panel,
     val et: EditText,
-    val waitingView: View,
-    var sendingIcon: View,
-    var hearIcon: View,
     val model: Model,
     var said: String = et.text.toString()
 ) {
@@ -33,7 +29,6 @@ class Client(
 
     companion object {
         var bSending = false
-        var anSending: ObjectAnimator? = null
     }
 
     init {
@@ -43,8 +38,6 @@ class Client(
         if (result) {
             sending(true)
             var got = "t=$said"
-            if (Nav.here != null) got = got
-                .plus("&y=${Nav.here!!.latitude}&x=${Nav.here!!.longitude}")
             Volley.newRequestQueue(c).add(
                 StringRequest(Request.Method.GET, encode("http://82.102.10.134/?$got"), { res ->
                     sending(false)
@@ -60,14 +53,12 @@ class Client(
                         temp.deleteOnExit()
                     }
                     model.res.value = said
-                    if (rec.continuous) rec.continueIt(waitingView)
                 }, {
                     sending(false)
                     Toast.makeText(c, "Connection failed: $it", Toast.LENGTH_SHORT).show()
-                    if (rec.continuous) rec.continueIt(waitingView)
                 }).setShouldCache(false).setTag("talk").setRetryPolicy(
                     DefaultRetryPolicy(
-                        rec.conDur.toInt(), 3, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+                        10000, 3, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
                     )
                 )
             )
@@ -77,8 +68,6 @@ class Client(
     fun sending(bb: Boolean) {
         bSending = bb
         et.isEnabled = !bb
-        anSending = Fun.whirl(sendingIcon, if (bb) null else anSending)
-        if (!bb) Fun.drown(hearIcon, true)
     }
 
     fun encode(uriString: String): String {

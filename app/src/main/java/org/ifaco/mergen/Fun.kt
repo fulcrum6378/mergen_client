@@ -19,7 +19,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
-@Suppress("unused")
 class Fun {
     companion object {
         lateinit var c: Context
