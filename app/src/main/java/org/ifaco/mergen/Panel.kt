@@ -54,6 +54,9 @@ class Panel : AppCompatActivity() {
         vis = Previewer(this, b.preview)
         Recorder.recordPermission(this)
         pro = Writer(this, model, b.body, b.response, b.resSV, b.say, b.clear)
+
+        // Connect to Mergen Server
+        Client(this)
     }
 
     override fun onResume() {

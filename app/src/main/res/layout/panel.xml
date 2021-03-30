@@ -22,7 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/CPO"
-        android:hint="....."
+        android:hint="@string/proHint"
         android:inputType="textMultiLine|textAutoComplete"
         android:letterSpacing="0.03"
         android:maxLength="1000"

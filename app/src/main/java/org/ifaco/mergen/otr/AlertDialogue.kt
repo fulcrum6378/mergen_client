@@ -3,6 +3,7 @@ package org.ifaco.mergen.otr
 import android.content.DialogInterface
 import android.graphics.Typeface
 import android.text.util.Linkify
+import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.Button
@@ -17,7 +18,7 @@ import org.ifaco.mergen.R
 class AlertDialogue {
     companion object {
         fun alertDialogue1(
-            that: AppCompatActivity, title: String, message: String,
+            that: AppCompatActivity, title: Int, message: String,
             onOK: DialogInterface.OnClickListener? = null,
             onCancel: DialogInterface.OnCancelListener? = null,
             font: Typeface = Fun.fRegular
@@ -28,6 +29,25 @@ class AlertDialogue {
                 setIcon(R.mipmap.launcher_round)
                 setPositiveButton(R.string.ok, onOK)
                 setOnCancelListener(onCancel)
+            }.create().apply {
+                show()
+                fixADButton(that, getButton(AlertDialog.BUTTON_POSITIVE), font)
+                fixADTitle(that, window, font)
+                fixADMsg(that, window, font)
+            }
+        }
+
+        fun alertDialogue2(
+            that: AppCompatActivity, title: Int, message: Int, view: View,
+            onOK: DialogInterface.OnClickListener? = null,
+            font: Typeface = Fun.fRegular
+        ) {
+            AlertDialog.Builder(that, R.style.alertDialogue1).apply {
+                setTitle(title)
+                setMessage(message)
+                setIcon(R.mipmap.launcher_round)
+                setPositiveButton(R.string.ok, onOK)
+                setView(view)
             }.create().apply {
                 show()
                 fixADButton(that, getButton(AlertDialog.BUTTON_POSITIVE), font)

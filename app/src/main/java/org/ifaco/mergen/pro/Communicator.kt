@@ -14,6 +14,7 @@ import org.ifaco.mergen.Fun.Companion.c
 import org.ifaco.mergen.Model
 import org.ifaco.mergen.Panel
 import org.ifaco.mergen.Panel.Companion.handler
+import org.ifaco.mergen.R
 import org.ifaco.mergen.otr.AlertDialogue
 import java.io.File
 import java.io.FileOutputStream
@@ -42,7 +43,7 @@ class Communicator(
                 StringRequest(Request.Method.GET, encode("http://82.102.10.134/?$got"), { res ->
                     sending(false)
                     if (res.startsWith("Traceback "))
-                        AlertDialogue.alertDialogue1(that, "Traceback", res)
+                        AlertDialogue.alertDialogue1(that, R.string.proError, res)
                     else {
                         val temp = File(c.cacheDir, "response.wav")
                         FileOutputStream(temp).apply {
