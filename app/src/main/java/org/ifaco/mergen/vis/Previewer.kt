@@ -35,7 +35,7 @@ class Previewer(val that: AppCompatActivity, val previewView: PreviewView) {
     companion object {
         const val reqCamPer = 868
         const val camPerm = Manifest.permission.CAMERA
-        val size = Size(1280, 800)
+        val size = Size(1200, 800)
     }
 
     fun granted() {
@@ -56,8 +56,9 @@ class Previewer(val that: AppCompatActivity, val previewView: PreviewView) {
         cameraProviderFuture.addListener({
             try {
                 cameraProvider = cameraProviderFuture.get()
-                preview = Preview.Builder().build()
-                    .also { it.setSurfaceProvider(previewView.surfaceProvider) }
+                preview = Preview.Builder()
+                    .setTargetResolution(Size(dm.widthPixels, dm.heightPixels))
+                    .build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
                 cameraProvider.unbindAll()
                 cameraSelector = CameraSelector.Builder()
                     .requireLensFacing(CameraSelector.LENS_FACING_BACK)
@@ -70,7 +71,7 @@ class Previewer(val that: AppCompatActivity, val previewView: PreviewView) {
                     .addUseCase(videoCapture)
                     .setViewPort(
                         ViewPort.Builder(
-                            Rational(dm.widthPixels, dm.heightPixels),
+                            Rational(dm.heightPixels, dm.widthPixels), // HEIGHT * WIDTH
                             that.resources.configuration.orientation
                         ).build()
                     )
@@ -94,6 +95,7 @@ class Previewer(val that: AppCompatActivity, val previewView: PreviewView) {
     fun resume() {
         if (!previewing || recording) return
         val vid = File(c.cacheDir, "vision.mp4")
+        if (vid.exists()) vid.delete()
         videoCapture.startRecording(
             VideoCapture.OutputFileOptions.Builder(vid).build(),
             cameraExecutor, object : VideoCapture.OnVideoSavedCallback {
