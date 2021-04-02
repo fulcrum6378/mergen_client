@@ -50,7 +50,8 @@ class Communicator(
                             write(Base64.decode(res, Base64.DEFAULT))
                             close()
                         }
-                        handler?.obtainMessage(Panel.Action.PRO.ordinal, temp.toUri())?.sendToTarget()
+                        handler?.obtainMessage(Panel.Action.PRONOUNCE.ordinal, temp.toUri())
+                            ?.sendToTarget()
                         temp.deleteOnExit()
                     }
                     model.res.value = said
@@ -66,12 +67,12 @@ class Communicator(
         }
     }
 
-    fun sending(bb: Boolean) {
+    private fun sending(bb: Boolean) {
         bSending = bb
         et.isEnabled = !bb
     }
 
-    fun encode(uriString: String): String {
+    private fun encode(uriString: String): String {
         if (TextUtils.isEmpty(uriString)) return uriString
         val allowedUrlCharacters = Pattern.compile(
             "([A-Za-z0-9_.~:/?\\#\\[\\]@!$&'()*+,;" + "=-]|%[0-9a-fA-F]{2})+"
