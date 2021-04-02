@@ -69,9 +69,8 @@ class Client(val that: Panel, val renderer: SurfaceViewRenderer) {
         alertDialogue2(
             that, R.string.cliConnect, R.string.cliConnectIP, et,
             DialogInterface.OnClickListener { _, _ ->
-                signallingClient =
-                    SignallingClient(createSignallingClientListener(), et.text.toString())
-                /*Volley.newRequestQueue(c).add(
+                //signallingClient = SignallingClient(createSignallingClientListener(), et.text.toString())
+                Volley.newRequestQueue(c).add(
                     StringRequest(Request.Method.GET, "http://${et.text}/", { res ->
                         Toast.makeText(c, res, Toast.LENGTH_LONG).show()
                     }, {
@@ -81,8 +80,8 @@ class Client(val that: Panel, val renderer: SurfaceViewRenderer) {
                             5000, 1, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
                         )
                     )
-                )*/
-                call(sdpObserver)
+                )
+                //call(sdpObserver)
             })
     }
 

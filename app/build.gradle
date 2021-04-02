@@ -28,12 +28,6 @@ android {
             debuggable true
         }
     }
-    packagingOptions {
-        exclude("META-INF/kotlinx-io.kotlin_module")
-        exclude("META-INF/atomicfu.kotlin_module")
-        exclude("META-INF/kotlinx-coroutines-io.kotlin_module")
-        exclude("META-INF/kotlinx-coroutines-core.kotlin_module")
-    }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -59,11 +53,4 @@ dependencies {
     implementation 'com.android.volley:volley:1.2.0'
     implementation "androidx.activity:activity-ktx:1.2.2"
     implementation 'org.webrtc:google-webrtc:1.0.32006'
-    implementation 'com.google.code.gson:gson:2.8.6'
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.1"
-
-    implementation "io.ktor:ktor-client-android:1.1.4"
-    implementation "io.ktor:ktor-client-websocket:1.1.4"
-    implementation "io.ktor:ktor-client-cio:1.1.4"
-    implementation "io.ktor:ktor-client-gson:1.1.4"
 }

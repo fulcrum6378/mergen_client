@@ -1,17 +1,5 @@
 package org.ifaco.mergen.rtc
 
-import android.util.Log
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.features.json.GsonSerializer
-import io.ktor.client.features.json.JsonFeature
-import io.ktor.client.features.websocket.WebSockets
-import io.ktor.client.features.websocket.ws
-import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.cio.websocket.readText
-import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -23,22 +11,19 @@ import kotlinx.coroutines.withContext
 import org.webrtc.IceCandidate
 import org.webrtc.SessionDescription
 
-@ExperimentalCoroutinesApi
-@KtorExperimentalAPI
 class SignallingClient(
     private val listener: SignallingClientListener,
     address: String
 ) : CoroutineScope {
     private val job = Job()
-    private val gson = Gson()
     override val coroutineContext = Dispatchers.IO + job
 
-    private val client = HttpClient(CIO) {
+    /*private val client = HttpClient(CIO) {
         install(WebSockets)
         install(JsonFeature) {
             serializer = GsonSerializer()
         }
-    }
+    }*/
 
     private val sendChannel = ConflatedBroadcastChannel<String>()
 
@@ -47,12 +32,11 @@ class SignallingClient(
     }
 
     private fun connect(ip: String, port: Int) = launch {
-        client.ws(host = ip, port = port, path = "/") {
+        /*client.ws(host = ip, port = port, path = "/") {
             listener.onConnectionEstablished()
             val sendData = sendChannel.openSubscription()
             try {
                 while (true) {
-
                     sendData.poll()?.let {
                         Log.v(this@SignallingClient.javaClass.simpleName, "Sending: $it")
                         outgoing.send(Frame.Text(it))
@@ -92,15 +76,15 @@ class SignallingClient(
             } catch (exception: Throwable) {
                 Log.e("asd", "asd", exception)
             }
-        }
+        }*/
     }
 
     fun send(dataObject: Any?) = runBlocking {
-        sendChannel.send(gson.toJson(dataObject))
+        //sendChannel.send(gson.toJson(dataObject))
     }
 
     fun destroy() {
-        client.close()
+        //client.close()
         job.complete()
     }
 }
