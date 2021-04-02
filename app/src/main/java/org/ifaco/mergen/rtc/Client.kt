@@ -5,11 +5,12 @@ import android.content.DialogInterface
 import android.widget.EditText
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
+import com.android.volley.AuthFailureError
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
+import com.android.volley.Response
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.ifaco.mergen.Fun.Companion.c
 import org.ifaco.mergen.Fun.Companion.dm
 import org.ifaco.mergen.Fun.Companion.dp
@@ -18,6 +19,11 @@ import org.ifaco.mergen.Panel
 import org.ifaco.mergen.R
 import org.ifaco.mergen.otr.AlertDialogue.Companion.alertDialogue2
 import org.webrtc.*
+import java.io.BufferedReader
+import java.io.IOException
+import java.io.InputStreamReader
+import java.io.PrintWriter
+import java.net.Socket
 
 class Client(val that: Panel, val renderer: SurfaceViewRenderer) {
     private var peerConnection: PeerConnection? = null
@@ -69,20 +75,56 @@ class Client(val that: Panel, val renderer: SurfaceViewRenderer) {
         alertDialogue2(
             that, R.string.cliConnect, R.string.cliConnectIP, et,
             DialogInterface.OnClickListener { _, _ ->
-                //signallingClient = SignallingClient(createSignallingClientListener(), et.text.toString())
-                Volley.newRequestQueue(c).add(
-                    StringRequest(Request.Method.GET, "http://${et.text}/", { res ->
+                signallingClient = SignallingClient(createSignallingClientListener(), et.text.toString())
+                call(sdpObserver)
+                /*Volley.newRequestQueue(c).add(
+                    object : StringRequest(Method.POST, "http://${et.text}/connect", { res ->
                         Toast.makeText(c, res, Toast.LENGTH_LONG).show()
-                    }, {
-                        Toast.makeText(c, "$it", Toast.LENGTH_LONG).show()
-                    }).setShouldCache(false).setTag("client").setRetryPolicy(
-                        DefaultRetryPolicy(
+                    }, Response.ErrorListener {
+                        Toast.makeText(c, "${it.message}", Toast.LENGTH_LONG).show()
+                    }) {
+                        @Throws(AuthFailureError::class)
+                        override fun getParams() = HashMap<String, String>().apply {
+                            this["sdp"] = "[525]"
+                            this["type"] = "[737]"
+                            this["video_transform"] = "153151"
+                        }
+                    }.apply {
+                        setShouldCache(false)
+                        tag = "client"
+                        retryPolicy = DefaultRetryPolicy(
                             5000, 1, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
                         )
-                    )
-                )
-                //call(sdpObserver)
+                    }
+                )*/
+                //Receiver().start()
             })
+    }
+
+    class Receiver : Thread() {
+        private var output: PrintWriter? = null
+        private var input: BufferedReader? = null
+
+        override fun run() {
+            val socket: Socket
+            try {
+                socket = Socket("192.168.1.9", 3772)
+                output = PrintWriter(socket.getOutputStream())
+                input = BufferedReader(InputStreamReader(socket.getInputStream()))
+                while (true)
+                    try {
+                        input!!.readLine()?.let {
+                            Panel.handler?.obtainMessage(Panel.Action.SOCKET.ordinal, it)
+                        }
+                        output!!.write("lll")
+                        output!!.flush()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun permissions() {

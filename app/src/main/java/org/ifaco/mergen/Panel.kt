@@ -3,8 +3,10 @@ package org.ifaco.mergen
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.*
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import org.ifaco.mergen.Fun.Companion.c
 import org.ifaco.mergen.Fun.Companion.permResult
 import org.ifaco.mergen.databinding.PanelBinding
 import org.ifaco.mergen.pro.Communicator
@@ -43,6 +45,8 @@ class Panel : AppCompatActivity() {
                         mp?.setOnPreparedListener { mp?.start() }
                         mp?.setOnCompletionListener { mp?.release(); mp = null }
                     }
+                    Action.SOCKET.ordinal ->
+                        Toast.makeText(c, msg.obj as String, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -89,7 +93,7 @@ class Panel : AppCompatActivity() {
     }
 
 
-    enum class Action { RECORD, WRITE, PRONOUNCE }
+    enum class Action { RECORD, WRITE, PRONOUNCE, SOCKET }
 }
 
 // adb tcpip 5555
