@@ -9,6 +9,7 @@ import org.ifaco.mergen.Fun.Companion.permResult
 import org.ifaco.mergen.databinding.PanelBinding
 import org.ifaco.mergen.pro.Communicator
 import org.ifaco.mergen.pro.Writer
+import org.ifaco.mergen.rtc.Client
 
 class Panel : AppCompatActivity() {
     lateinit var b: PanelBinding
@@ -19,7 +20,6 @@ class Panel : AppCompatActivity() {
 
     companion object {
         const val reqRecord = 786
-
         var handler: Handler? = null
         var mp: MediaPlayer? = null
     }
@@ -36,7 +36,7 @@ class Panel : AppCompatActivity() {
         handler = object : Handler(Looper.getMainLooper()) {
             override fun handleMessage(msg: Message) {
                 when (msg.what) {
-                    Action.RECORD.ordinal -> client.record(b.renderer)
+                    Action.RECORD.ordinal -> client.record()
                     Action.WRITE.ordinal -> msg.obj?.let { b.say.setText("$it") }
                     Action.PRONOUNCE.ordinal -> {
                         mp = MediaPlayer.create(this@Panel, msg.obj as Uri)
@@ -52,7 +52,11 @@ class Panel : AppCompatActivity() {
         com = Communicator(this, b.say, model)
 
         // RTC
-        client = Client(this)
+        client = Client(this, b.renderer)
+        b.body.setOnLongClickListener {
+            client.callMe()
+            true
+        }
     }
 
     override fun onResume() {
@@ -64,6 +68,7 @@ class Panel : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        client.destroy()
         try {
             mp?.release()
         } catch (ignored: Exception) {
@@ -86,3 +91,7 @@ class Panel : AppCompatActivity() {
 
     enum class Action { RECORD, WRITE, PRONOUNCE }
 }
+
+// adb tcpip 5555
+// adb connect 192.168.1.4:5555
+// adb kill-server

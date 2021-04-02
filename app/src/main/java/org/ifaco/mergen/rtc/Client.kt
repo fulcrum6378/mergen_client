@@ -1,0 +1,254 @@
+package org.ifaco.mergen.rtc
+
+import android.Manifest
+import android.content.DialogInterface
+import android.widget.EditText
+import android.widget.Toast
+import androidx.core.app.ActivityCompat
+import com.android.volley.DefaultRetryPolicy
+import com.android.volley.Request
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import org.ifaco.mergen.Fun.Companion.c
+import org.ifaco.mergen.Fun.Companion.dm
+import org.ifaco.mergen.Fun.Companion.dp
+import org.ifaco.mergen.Fun.Companion.permGranted
+import org.ifaco.mergen.Panel
+import org.ifaco.mergen.R
+import org.ifaco.mergen.otr.AlertDialogue.Companion.alertDialogue2
+import org.webrtc.*
+
+class Client(val that: Panel, val renderer: SurfaceViewRenderer) {
+    private var peerConnection: PeerConnection? = null
+    private val rootEglBase: EglBase = EglBase.create()
+    private lateinit var localVideoSource: VideoSource
+    private lateinit var videoCapturer: VideoCapturer
+
+    private val iceServer = listOf(
+        PeerConnection.IceServer.builder("stun:stun.l.google.com:19302")
+            .createIceServer()
+    )
+    private val observer = object : PeerConnectionObserver() {
+        override fun onIceCandidate(p0: IceCandidate?) {
+            super.onIceCandidate(p0)
+            signallingClient.send(p0)
+            addIceCandidate(p0)
+        }
+
+        override fun onAddStream(p0: MediaStream?) {
+            super.onAddStream(p0)
+            //p0?.videoTracks?.get(0)?.addSink(remote_view)
+        }
+    }
+
+    private lateinit var signallingClient: SignallingClient
+
+    private val sdpObserver = object : AppSdpObserver() {
+        override fun onCreateSuccess(p0: SessionDescription?) {
+            super.onCreateSuccess(p0)
+            signallingClient.send(p0)
+        }
+    }
+
+    init {
+        permissions()
+    }
+
+    companion object {
+        const val LOCAL_TRACK_ID = "MERGEN" // "local_track"
+        const val LOCAL_STREAM_ID = "local_track"
+    }
+
+    fun address() {
+        val et = EditText(c).apply {
+            setPadding(dp(18), dp(12), dp(18), dp(12))
+            textSize = that.resources.getDimension(R.dimen.alert1Title) / dm.density
+            setText(R.string.cliDefIP)
+        }
+        alertDialogue2(
+            that, R.string.cliConnect, R.string.cliConnectIP, et,
+            DialogInterface.OnClickListener { _, _ ->
+                signallingClient =
+                    SignallingClient(createSignallingClientListener(), et.text.toString())
+                /*Volley.newRequestQueue(c).add(
+                    StringRequest(Request.Method.GET, "http://${et.text}/", { res ->
+                        Toast.makeText(c, res, Toast.LENGTH_LONG).show()
+                    }, {
+                        Toast.makeText(c, "$it", Toast.LENGTH_LONG).show()
+                    }).setShouldCache(false).setTag("client").setRetryPolicy(
+                        DefaultRetryPolicy(
+                            5000, 1, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+                        )
+                    )
+                )*/
+                call(sdpObserver)
+            })
+    }
+
+    fun permissions() {
+        if (permGranted(Manifest.permission.RECORD_AUDIO) && permGranted(Manifest.permission.CAMERA))
+            Panel.handler?.obtainMessage(Panel.Action.RECORD.ordinal)?.sendToTarget()
+        else ActivityCompat.requestPermissions(
+            that,
+            arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA),
+            Panel.reqRecord
+        )
+    }
+
+    fun record() {
+        // Initialising PeerConnectionFactory
+        val options = PeerConnectionFactory.InitializationOptions.builder(c)
+            .setEnableInternalTracer(true)
+            .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
+            .createInitializationOptions()
+        PeerConnectionFactory.initialize(options)
+
+        // Configuring PeerConnectionFactory
+        val peerConnectionFactory = PeerConnectionFactory
+            .builder()
+            .setVideoDecoderFactory(DefaultVideoDecoderFactory(rootEglBase.eglBaseContext))
+            .setVideoEncoderFactory(
+                DefaultVideoEncoderFactory(rootEglBase.eglBaseContext, true, true)
+            )
+            .setOptions(PeerConnectionFactory.Options().apply {
+                disableEncryption = true
+                disableNetworkMonitor = true
+            })
+            .createPeerConnectionFactory()
+        peerConnection = peerConnectionFactory.createPeerConnection(iceServer, observer)!!
+
+        // Setting the video output
+        renderer.setMirror(false)
+        renderer.setEnableHardwareScaler(true)
+        renderer.init(rootEglBase.eglBaseContext, null)
+        // All 3 statements should be done for the remote view, including the next statements
+
+        // Getting the video source
+        Camera2Enumerator(c).run {
+            deviceNames.find { isBackFacing(it) }?.let {
+                videoCapturer = createCapturer(it, null)
+                localVideoSource = peerConnectionFactory.createVideoSource(false)
+                val surfaceTextureHelper = SurfaceTextureHelper.create(
+                    Thread.currentThread().name, rootEglBase.eglBaseContext
+                )
+                videoCapturer.initialize(surfaceTextureHelper, c, localVideoSource.capturerObserver)
+                videoCapturer.startCapture(480, 640, 60) // width, height, frame per second
+
+                /*val localVideoTrack =
+                    peerConnectionFactory.createVideoTrack(LOCAL_TRACK_ID, localVideoSource)
+                localVideoTrack.addSink(localVideoOutput)
+                val localStream = peerConnectionFactory.createLocalMediaStream(LOCAL_STREAM_ID)
+                localStream.addTrack(localVideoTrack)
+                peerConnection?.addStream(localStream)*/
+
+                peerConnectionFactory.createVideoTrack(LOCAL_TRACK_ID, localVideoSource)
+                    .addSink(renderer)
+            } ?: throw IllegalStateException()
+        }
+    }
+
+    private fun createSignallingClientListener() = object : SignallingClientListener {
+        override fun onConnectionEstablished() {
+            //call_button.isClickable = true
+        }
+
+        override fun onOfferReceived(description: SessionDescription) {
+            onRemoteSessionReceived(description)
+            answer(sdpObserver)
+            //remote_view_loading.isGone = true
+        }
+
+        override fun onAnswerReceived(description: SessionDescription) {
+            onRemoteSessionReceived(description)
+            //remote_view_loading.isGone = true
+        }
+
+        override fun onIceCandidateReceived(iceCandidate: IceCandidate) {
+            addIceCandidate(iceCandidate)
+        }
+    }
+
+    private fun PeerConnection.call(sdpObserver: SdpObserver) {
+        val constraints = MediaConstraints().apply {
+            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
+        }
+
+        createOffer(object : SdpObserver by sdpObserver {
+            override fun onCreateSuccess(desc: SessionDescription?) {
+
+                setLocalDescription(object : SdpObserver {
+                    override fun onSetFailure(p0: String?) {
+                    }
+
+                    override fun onSetSuccess() {
+                    }
+
+                    override fun onCreateSuccess(p0: SessionDescription?) {
+                    }
+
+                    override fun onCreateFailure(p0: String?) {
+                    }
+                }, desc)
+                sdpObserver.onCreateSuccess(desc)
+            }
+        }, constraints)
+    }
+
+    private fun PeerConnection.answer(sdpObserver: SdpObserver) {
+        val constraints = MediaConstraints().apply {
+            mandatory.add(MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"))
+        }
+
+        createAnswer(object : SdpObserver by sdpObserver {
+            override fun onCreateSuccess(p0: SessionDescription?) {
+                setLocalDescription(object : SdpObserver {
+                    override fun onSetFailure(p0: String?) {
+                    }
+
+                    override fun onSetSuccess() {
+                    }
+
+                    override fun onCreateSuccess(p0: SessionDescription?) {
+                    }
+
+                    override fun onCreateFailure(p0: String?) {
+                    }
+                }, p0)
+                sdpObserver.onCreateSuccess(p0)
+            }
+        }, constraints)
+    }
+
+    fun call(sdpObserver: SdpObserver) = peerConnection?.call(sdpObserver)
+
+    fun answer(sdpObserver: SdpObserver) = peerConnection?.answer(sdpObserver)
+
+    fun onRemoteSessionReceived(sessionDescription: SessionDescription) {
+        peerConnection?.setRemoteDescription(object : SdpObserver {
+            override fun onSetFailure(p0: String?) {
+            }
+
+            override fun onSetSuccess() {
+            }
+
+            override fun onCreateSuccess(p0: SessionDescription?) {
+            }
+
+            override fun onCreateFailure(p0: String?) {
+            }
+        }, sessionDescription)
+    }
+
+    fun addIceCandidate(iceCandidate: IceCandidate?) {
+        peerConnection?.addIceCandidate(iceCandidate)
+    }
+
+    fun callMe() {
+        address()
+    }
+
+    fun destroy() {
+        signallingClient.destroy()
+    }
+}
