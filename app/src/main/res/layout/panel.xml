@@ -10,13 +10,6 @@
     tools:context=".Panel"
     tools:ignore="MissingConstraints">
 
-    <org.webrtc.SurfaceViewRenderer
-        android:id="@+id/renderer"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/say" />
-
     <EditText
         android:id="@+id/say"
         android:layout_width="match_parent"
