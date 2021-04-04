@@ -20,7 +20,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.regex.Pattern
 
-class Communicator(
+class Talker(
     val that: Panel,
     val et: EditText,
     val model: Model,

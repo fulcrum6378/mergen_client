@@ -35,7 +35,7 @@ class Writer(
         bSay.addTextChangedListener { Fun.vish(bClear, it.toString().isNotEmpty()) }
         bBody.setOnClickListener(object : DoubleClickListener() {
             override fun onDoubleClick() {
-                if (!Communicator.bSending) Communicator(that, bSay, model)
+                if (!Talker.bSending) Talker(that, bSay, model)
             }
         })
         bClear.setOnClickListener {
