@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.mergen.android">
+    package="com.mahdiparastesh.android">
 
     <uses-feature
         android:name="android.hardware.camera.any"
@@ -23,7 +23,7 @@
         android:theme="@style/Theme.MergenAndroid"
         tools:targetApi="n">
 
-        <activity android:name="com.mergen.android.Panel">
+        <activity android:name="com.mahdiparastesh.android.ir.mahdiparastesh.android.Panel">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
