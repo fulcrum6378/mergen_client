@@ -13,7 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import ir.mahdiparastesh.mergen.Fun
 import ir.mahdiparastesh.mergen.Fun.Companion.color
-import com.mahdiparastesh.android.R
+import ir.mahdiparastesh.mergen.R
 
 class AlertDialogue {
     companion object {
