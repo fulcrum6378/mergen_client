@@ -1,4 +1,4 @@
-package ir.mahdiparastesh.mergen.com
+package ir.mahdiparastesh.mergen.man
 
 import android.Manifest
 import android.os.CountDownTimer
@@ -10,7 +10,7 @@ import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.R
 import ir.mahdiparastesh.mergen.otr.AlertDialogue
 
-class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
+class Controller(val that: Panel, val bPreview: PreviewView) : ToRecord {
     private var con = Connect(conPort)
     val rec = Recorder(that, bPreview)
 
@@ -121,16 +121,17 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
 
     var toggling = false
     fun toggle() {
-        if (socketErrorTimer != null || toggling) return
+        if (socketErrorTimer != null || toggling || !rec.previewing) return
         toggling = true
         if (!rec.recording) begin() else end()
     }
 
     override fun on() {
-        rec.on()
+        //rec.on()
     }
 
     override fun begin() {
+        if (rec.recording) return
         var ended = false
         val run = Thread {
             if (con.send(Notify.START.s, foreword = false, receive = true) == "true")
@@ -153,6 +154,7 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     }
 
     override fun end() {
+        if (!rec.recording) return
         rec.end()
         Thread { con.send(Notify.STOP.s, foreword = false, receive = true) }.start()
         toggling = false

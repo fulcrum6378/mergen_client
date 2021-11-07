@@ -14,6 +14,7 @@
         android:id="@+id/preview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/say" />
 
@@ -33,6 +34,7 @@
         android:textColor="@color/CS"
         android:textColorHint="@color/CSV"
         android:textSize="20sp"
+        android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -41,6 +43,7 @@
         android:layout_height="46dp"
         android:layout_marginEnd="20dp"
         android:background="@drawable/hover_1"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@id/say"
         app:layout_constraintEnd_toEndOf="@id/say"
         app:layout_constraintTop_toTopOf="@id/say">
@@ -116,7 +119,8 @@
         android:layout_height="66dp"
         android:alpha="0.5"
         android:background="@drawable/round_button_1"
-        app:layout_constraintVertical_bias="0.85" />
+        android:clickable="false"
+        app:layout_constraintVertical_bias="0.88" />
 
     <ImageView
         android:id="@+id/recording"
@@ -131,4 +135,12 @@
         app:layout_constraintLeft_toLeftOf="@id/record"
         app:layout_constraintRight_toRightOf="@id/record"
         app:layout_constraintTop_toTopOf="@id/record" />
+
+    <View
+        android:id="@+id/radar"
+        style="@style/match"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0.85"
+        android:background="@drawable/radar" />
 </androidx.constraintlayout.widget.ConstraintLayout>

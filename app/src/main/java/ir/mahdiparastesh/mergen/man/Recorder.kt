@@ -1,4 +1,4 @@
-package ir.mahdiparastesh.mergen.com
+package ir.mahdiparastesh.mergen.man
 
 import android.annotation.SuppressLint
 import android.os.CountDownTimer
@@ -12,6 +12,7 @@ import androidx.core.content.ContextCompat
 import com.google.common.util.concurrent.ListenableFuture
 import ir.mahdiparastesh.mergen.Fun
 import ir.mahdiparastesh.mergen.Fun.Companion.c
+import ir.mahdiparastesh.mergen.Fun.Companion.vish
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.Panel.Action
 import ir.mahdiparastesh.mergen.Panel.Companion.handler
@@ -34,7 +35,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     var recording = false
     var ear: Hearing? = null
     var time: Long = 0L
-    var pool: StreamPool = StreamPool(Connect(Controller.visPort))
+    var pool: StreamPool? = null
 
     companion object {
         const val FRAME = 1L // 50L
@@ -43,8 +44,9 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
 
     @SuppressLint("RestrictedApi")
     override fun on() {
-        if (!canPreview) return
-        if (previewing) return
+        if (!canPreview || previewing) return
+        pool = StreamPool(Connect(Controller.visPort))
+        vish(bPreview)
         previewing = true
         cameraProviderFuture = ProcessCameraProvider.getInstance(c)
         cameraProviderFuture.addListener({
@@ -82,9 +84,12 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
 
     override fun off() {
         if (!previewing || !canPreview) return
+        vish(bPreview, false)
         previewing = false
         preview.setSurfaceProvider(null)
         bPreview.removeAllViews()
+        pool?.destroy()
+        pool = null
     }
 
     override fun begin() {
@@ -107,7 +112,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
                     if (!recording) return
                     runBlocking {
                         FileInputStream(vis).use {
-                            pool.add(StreamPool.Item(time, it.readBytes()))
+                            pool?.add(StreamPool.Item(time, it.readBytes()))
                             it.close()
                         }
                     }
@@ -136,7 +141,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     override fun end() {
         if (recording) handler?.obtainMessage(Action.TOGGLE.ordinal, false)?.sendToTarget()
         recording = false
-        pool.clear()
+        pool?.clear()
         ear?.pool?.clear()
         ear?.interrupt()
         ear = null
@@ -145,7 +150,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     override fun destroy() {
         if (!canPreview) return
         cameraExecutor.shutdown()
-        pool.destroy()
+        pool?.destroy()
         ear?.pool?.destroy()
     }
 }

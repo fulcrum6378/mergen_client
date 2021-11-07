@@ -6,6 +6,7 @@
     <color name="CS">#1162ED</color>
     <color name="CSV">#771162ED</color>
     <color name="CSO">@color/CPO</color>
+    <color name="TP">#00000000</color>
 
     <color name="response">#66222222</color>
     <color name="ADBG">@color/CPO</color>
