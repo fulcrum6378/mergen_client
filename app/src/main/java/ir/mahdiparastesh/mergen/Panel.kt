@@ -2,8 +2,10 @@ package ir.mahdiparastesh.mergen
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
+import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
+import android.net.wifi.p2p.WifiP2pManager
 import android.os.*
 import android.widget.EditText
 import android.widget.Toast
@@ -14,6 +16,7 @@ import ir.mahdiparastesh.mergen.Fun.Companion.permResult
 import ir.mahdiparastesh.mergen.databinding.PanelBinding
 import ir.mahdiparastesh.mergen.man.Connect
 import ir.mahdiparastesh.mergen.man.Controller
+import ir.mahdiparastesh.mergen.man.NetworkDiscovery
 import ir.mahdiparastesh.mergen.otr.AlertDialogue
 import ir.mahdiparastesh.mergen.pro.Writer
 
@@ -30,6 +33,11 @@ class Panel : AppCompatActivity() {
     companion object {
         var handler: Handler? = null
         var mp: MediaPlayer? = null
+        var ndReceiver: NetworkDiscovery? = null
+        var ndChannel: WifiP2pManager.Channel? = null
+        val ndManager: WifiP2pManager? by lazy(LazyThreadSafetyMode.NONE) {
+            Fun.c.getSystemService(Context.WIFI_P2P_SERVICE) as WifiP2pManager?
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,8 +97,11 @@ class Panel : AppCompatActivity() {
         }
 
         // INITIALIZATION
-        pro = Writer(this, m, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
+        ndChannel = ndManager?.initialize(this, mainLooper, null)?.also { channel ->
+            ndReceiver = NetworkDiscovery(ndManager!!, channel, this)
+        }
         man = Controller(this, b.preview)
+        pro = Writer(this, m, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
         b.record.setOnClickListener { man.toggle() }
         b.recording.colorFilter = Fun.cf(R.color.CPO)
 
@@ -103,15 +114,30 @@ class Panel : AppCompatActivity() {
         Fun.whirlRadar(b.radar)
     }
 
+    @SuppressLint("MissingPermission")
     override fun onResume() {
         super.onResume()
         man.on()
+
+        if (!NetworkDiscovery.registered && ndReceiver != null) {
+            registerReceiver(ndReceiver, NetworkDiscovery.filters)
+            NetworkDiscovery.registered = true
+        }
+        ndManager?.discoverPeers(ndChannel, object : WifiP2pManager.ActionListener {
+            override fun onFailure(reasonCode: Int) {}
+            override fun onSuccess() {}
+        })
     }
 
     override fun onPause() {
         super.onPause()
         man.end()
         man.off()
+
+        if (NetworkDiscovery.registered) {
+            if (ndReceiver != null) unregisterReceiver(ndReceiver)
+            NetworkDiscovery.registered = false
+        }
     }
 
     override fun onDestroy() {
@@ -132,7 +158,7 @@ class Panel : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         val b = permResult(grantResults)
         when (requestCode) {
-            Controller.req -> if (b) man.permitted()
+            Controller.req -> if (b) man.permitted(true)
         }
     }
 

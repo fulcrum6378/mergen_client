@@ -1,22 +1,26 @@
 package ir.mahdiparastesh.mergen.man
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.net.wifi.p2p.WifiP2pManager
 import android.os.CountDownTimer
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import ir.mahdiparastesh.mergen.Fun
 import ir.mahdiparastesh.mergen.Fun.Companion.c
 import ir.mahdiparastesh.mergen.Panel
+import ir.mahdiparastesh.mergen.Panel.Companion.ndReceiver
 import ir.mahdiparastesh.mergen.R
 import ir.mahdiparastesh.mergen.otr.AlertDialogue
 
-class Controller(val that: Panel, val bPreview: PreviewView) : ToRecord {
+class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     private var con = Connect(conPort)
     val rec = Recorder(that, bPreview)
 
     companion object {
         const val camPerm = Manifest.permission.CAMERA
         const val audPerm = Manifest.permission.RECORD_AUDIO
+        const val locPerm = Manifest.permission.ACCESS_FINE_LOCATION
         const val req = 786
         const val spHost = "host"
         const val spPort = "port"
@@ -33,12 +37,23 @@ class Controller(val that: Panel, val bPreview: PreviewView) : ToRecord {
     }
 
     init {
-        if (!Fun.permGranted(camPerm) || !Fun.permGranted(audPerm))
-            ActivityCompat.requestPermissions(that, arrayOf(camPerm, audPerm), req)
+        if (!Fun.permGranted(camPerm) || !Fun.permGranted(audPerm) || !Fun.permGranted(locPerm))
+            ActivityCompat.requestPermissions(that, arrayOf(camPerm, audPerm, locPerm), req)
         else permitted()
     }
 
-    fun permitted() {
+    @SuppressLint("MissingPermission")
+    fun permitted(later: Boolean = false) {
+        if (later) {
+            // Network Discovery
+            c.registerReceiver(ndReceiver, NetworkDiscovery.filters)
+            NetworkDiscovery.registered = true
+            Panel.ndManager?.discoverPeers(Panel.ndChannel, object : WifiP2pManager.ActionListener {
+                override fun onFailure(p0: Int) {}
+                override fun onSuccess() {}
+            })
+        }
+
         rec.canPreview = true
         on()
 
