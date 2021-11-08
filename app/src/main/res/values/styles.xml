@@ -36,4 +36,27 @@
         <item name="layout_constraintTop_toTopOf">parent</item>
         <item name="layout_constraintHeight_percent">0.47</item>
     </style>
+
+    <style name="address">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">25dp</item>
+        <item name="android:textColor">@color/CS</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAlignment">center</item>
+    </style>
+
+    <style name="addressET" parent="address">
+        <item name="android:layout_weight">10</item>
+        <item name="android:inputType">number</item>
+        <item name="android:letterSpacing">0.05</item>
+        <item name="android:maxLength">3</item>
+        <item name="android:textColorHint">@color/CSV</item>
+        <item name="android:background">@color/TP</item>
+    </style>
+
+    <style name="addressPoint" parent="address">
+        <item name="android:layout_weight">3</item>
+        <item name="android:text">.</item>
+    </style>
 </resources>

@@ -1,15 +1,13 @@
 package ir.mahdiparastesh.mergen.man
 
 import android.Manifest
-import android.annotation.SuppressLint
-import android.net.wifi.p2p.WifiP2pManager
 import android.os.CountDownTimer
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
-import ir.mahdiparastesh.mergen.Fun
 import ir.mahdiparastesh.mergen.Fun.Companion.c
+import ir.mahdiparastesh.mergen.Fun.Companion.permGranted
+import ir.mahdiparastesh.mergen.Fun.Companion.sp
 import ir.mahdiparastesh.mergen.Panel
-import ir.mahdiparastesh.mergen.Panel.Companion.ndReceiver
 import ir.mahdiparastesh.mergen.R
 import ir.mahdiparastesh.mergen.otr.AlertDialogue
 
@@ -20,62 +18,35 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     companion object {
         const val camPerm = Manifest.permission.CAMERA
         const val audPerm = Manifest.permission.RECORD_AUDIO
-        const val locPerm = Manifest.permission.ACCESS_FINE_LOCATION
         const val req = 786
         const val spHost = "host"
-        const val spPort = "port"
         const val socketErrorTO = 1000L
         const val conPort = 0
         const val visPort = 1
         const val earPort = 2
         const val conTimeout = 1500L
+        const val port = 3772
         val socketErrors = ArrayList<Connect.Error>()
         var socketErrorTimer: CountDownTimer? = null
         var host = "127.0.0.1"
-        var port = 80
-        var isAcknowledged = false
+
+        fun succeeded() {
+            sp.edit().apply {
+                putString(spHost, host)
+                apply()
+            }
+        }
     }
 
     init {
-        if (!Fun.permGranted(camPerm) || !Fun.permGranted(audPerm) || !Fun.permGranted(locPerm))
-            ActivityCompat.requestPermissions(that, arrayOf(camPerm, audPerm, locPerm), req)
+        if (!permGranted(camPerm) || !permGranted(audPerm))
+            ActivityCompat.requestPermissions(that, arrayOf(camPerm, audPerm), req)
         else permitted()
     }
 
-    @SuppressLint("MissingPermission")
-    fun permitted(later: Boolean = false) {
-        if (later) {
-            // Network Discovery
-            c.registerReceiver(ndReceiver, NetworkDiscovery.filters)
-            NetworkDiscovery.registered = true
-            Panel.ndManager?.discoverPeers(Panel.ndChannel, object : WifiP2pManager.ActionListener {
-                override fun onFailure(p0: Int) {}
-                override fun onSuccess() {}
-            })
-        }
-
+    fun permitted() {
         rec.canPreview = true
         on()
-
-        var hasHost = Fun.sp.contains(spHost)
-        var hasPort = Fun.sp.contains(spPort)
-        if (!hasHost || !hasPort) Panel.handler?.obtainMessage(Panel.Action.QUERY.ordinal)
-            ?.sendToTarget()
-        else acknowledged(
-            Fun.sp.getString(spHost, "127.0.0.1")!!,
-            Fun.sp.getInt(spPort, 80)
-        )
-    }
-
-    fun acknowledged(h: String, p: Int) {
-        host = h
-        port = p
-        Fun.sp.edit().apply {
-            putString(spHost, h)
-            putInt(spPort, p)
-            apply()
-        }
-        isAcknowledged = true
     }
 
     fun socketError(e: Connect.Error) {
@@ -93,7 +64,7 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     }
 
     fun judgeSocketStatus() {
-        var mustQuery = false
+        var wrong = false
         var conProblem = false
         var whichSock = "UNKNOWN"
         var whichAddr = whichSock
@@ -109,15 +80,15 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
             }
             when (e.e) {
                 "java.net.NoRouteToHostException", "java.net.UnknownHostException",
-                "timedOut", "wrongAnswer" -> mustQuery = true
+                "timedOut", "wrongAnswer" -> wrong = true
                 "java.net.ConnectException" -> conProblem = true
                 "false" -> sentNull = true
                 else -> unknown = e.e
             }
         }
         when {
-            mustQuery ->
-                Panel.handler?.obtainMessage(Panel.Action.QUERY.ordinal)?.sendToTarget()
+            wrong -> {
+            }
             unknown != null -> AlertDialogue.alertDialogue1(
                 that, R.string.recConnectErr,
                 c.getString(R.string.recSocketUnknownErr, unknown, whichSock)
@@ -142,7 +113,7 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     }
 
     override fun on() {
-        //rec.on()
+        rec.on()
     }
 
     override fun begin() {

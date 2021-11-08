@@ -2,23 +2,22 @@ package ir.mahdiparastesh.mergen
 
 import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
-import android.net.wifi.p2p.WifiP2pManager
 import android.os.*
-import android.widget.EditText
+import android.text.Editable
+import android.text.TextWatcher
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import ir.mahdiparastesh.mergen.Fun.Companion.dm
 import ir.mahdiparastesh.mergen.Fun.Companion.permResult
+import ir.mahdiparastesh.mergen.Fun.Companion.sp
 import ir.mahdiparastesh.mergen.databinding.PanelBinding
 import ir.mahdiparastesh.mergen.man.Connect
 import ir.mahdiparastesh.mergen.man.Controller
-import ir.mahdiparastesh.mergen.man.NetworkDiscovery
-import ir.mahdiparastesh.mergen.otr.AlertDialogue
+import ir.mahdiparastesh.mergen.otr.DoubleClickListener
 import ir.mahdiparastesh.mergen.pro.Writer
+import java.lang.StringBuilder
 
 // adb connect 192.168.1.20:
 // python C:\Users\fulcr\Projects\mergen\main.py
@@ -33,11 +32,6 @@ class Panel : AppCompatActivity() {
     companion object {
         var handler: Handler? = null
         var mp: MediaPlayer? = null
-        var ndReceiver: NetworkDiscovery? = null
-        var ndChannel: WifiP2pManager.Channel? = null
-        val ndManager: WifiP2pManager? by lazy(LazyThreadSafetyMode.NONE) {
-            Fun.c.getSystemService(Context.WIFI_P2P_SERVICE) as WifiP2pManager?
-        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,29 +58,6 @@ class Panel : AppCompatActivity() {
                     } catch (ignored: Exception) {
                         Toast.makeText(Fun.c, "INVALID MESSAGE", Toast.LENGTH_SHORT).show()
                     }
-                    Action.QUERY.ordinal -> {
-                        val et = EditText(Fun.c).apply {
-                            setPadding(Fun.dp(18), Fun.dp(12), Fun.dp(18), Fun.dp(12))
-                            textSize =
-                                this@Panel.resources.getDimension(R.dimen.alert1Title) / dm.density
-                            setText(
-                                Fun.sp.getString(Controller.spHost, "127.0.0.1") +
-                                        ":${Fun.sp.getInt(Controller.spPort, 80)}"
-                            )
-                        }
-                        AlertDialogue.alertDialogue2(
-                            this@Panel, R.string.recConnect, R.string.recConnectIP, et, { _, _ ->
-                                try {
-                                    val spl = et.text.toString().split(":")
-                                    man.acknowledged(spl[0], spl[1].toInt())
-                                } catch (ignored: java.lang.Exception) {
-                                    handler?.obtainMessage(
-                                        Action.TOAST.ordinal, "Invalid address, please try again!"
-                                    )?.sendToTarget()
-                                }
-                            }
-                        )
-                    }
                     Action.SOCKET_ERROR.ordinal -> man.socketError(msg.obj as Connect.Error)
                     Action.TOGGLE.ordinal -> anRecording =
                         if (msg.obj as Boolean) Fun.whirl(b.recording, null)
@@ -97,47 +68,54 @@ class Panel : AppCompatActivity() {
         }
 
         // INITIALIZATION
-        ndChannel = ndManager?.initialize(this, mainLooper, null)?.also { channel ->
-            ndReceiver = NetworkDiscovery(ndManager!!, channel, this)
-        }
         man = Controller(this, b.preview)
         pro = Writer(this, m, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
-        b.record.setOnClickListener { man.toggle() }
+
+        // Connection
+        val hint = "127.0.0.1".split(".")
+        val addr = sp.getString(Controller.spHost, "")!!
+        var ard: List<String>? = null
+        if (addr != "") ard = addr.split(".")
+        val adrETs = listOf(b.address1, b.address2, b.address3, b.address4)
+        adrETs.forEachIndexed { i, et ->
+            et.hint = hint[i]
+            if (ard != null) et.setText(ard[i])
+            et.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence?, r: Int, c: Int, a: Int) {}
+                override fun onTextChanged(s: CharSequence?, r: Int, b: Int, c: Int) {}
+                override fun afterTextChanged(s: Editable?) {
+                    if (adrETs.all { et -> et.text.toString().isNotEmpty() }) man.begin()
+                    else if (i == adrETs.size - 1 && s.toString().length == 3) {
+                        val next = adrETs[i + 1]
+                        if (next.text.isEmpty()) next.requestFocus()
+                    }
+                }
+            })
+        }
+        b.preview.setOnClickListener(object : DoubleClickListener() {
+            override fun onDoubleClick() {
+                val ar = arrayListOf<String>()
+                adrETs.forEach { e -> ar.add(e.text.toString()) }
+                Controller.host = ar.joinToString(".")
+                man.toggle()
+            }
+        })
         b.recording.colorFilter = Fun.cf(R.color.CPO)
 
-        // Radar
-        b.radar.layoutParams.apply {
-            val diameter = maxOf(dm.widthPixels, dm.heightPixels)
-            width = diameter
-            height = diameter
+        // Overflow Menu
+        b.overflow.setOnClickListener {
         }
-        Fun.whirlRadar(b.radar)
     }
 
-    @SuppressLint("MissingPermission")
     override fun onResume() {
         super.onResume()
         man.on()
-
-        if (!NetworkDiscovery.registered && ndReceiver != null) {
-            registerReceiver(ndReceiver, NetworkDiscovery.filters)
-            NetworkDiscovery.registered = true
-        }
-        ndManager?.discoverPeers(ndChannel, object : WifiP2pManager.ActionListener {
-            override fun onFailure(reasonCode: Int) {}
-            override fun onSuccess() {}
-        })
     }
 
     override fun onPause() {
         super.onPause()
         man.end()
         man.off()
-
-        if (NetworkDiscovery.registered) {
-            if (ndReceiver != null) unregisterReceiver(ndReceiver)
-            NetworkDiscovery.registered = false
-        }
     }
 
     override fun onDestroy() {
@@ -158,9 +136,9 @@ class Panel : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         val b = permResult(grantResults)
         when (requestCode) {
-            Controller.req -> if (b) man.permitted(true)
+            Controller.req -> if (b) man.permitted()
         }
     }
 
-    enum class Action { WRITE, TALK, TOAST, QUERY, SOCKET_ERROR, TOGGLE, FORCE_REC }
+    enum class Action { WRITE, TALK, TOAST, SOCKET_ERROR, TOGGLE, FORCE_REC }
 }

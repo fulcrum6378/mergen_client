@@ -1,6 +1,5 @@
 package ir.mahdiparastesh.mergen.man
 
-import android.annotation.SuppressLint
 import android.os.CountDownTimer
 import android.util.Rational
 import android.util.Size
@@ -42,7 +41,6 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
         val size = Size(800, 400)
     }
 
-    @SuppressLint("RestrictedApi")
     override fun on() {
         if (!canPreview || previewing) return
         pool = StreamPool(Connect(Controller.visPort))
@@ -93,7 +91,6 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     }
 
     override fun begin() {
-        if (!Controller.isAcknowledged) return
         time = 0L
         c.cacheDir.listFiles()?.forEach { it.delete() }
         recording = true

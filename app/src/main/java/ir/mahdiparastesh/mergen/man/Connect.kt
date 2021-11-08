@@ -13,6 +13,7 @@ class Connect(val portAdd: Int = 0) {
         if (data == null) error("false")
         else try {
             var socket = Socket(Controller.host, Controller.port + portAdd)
+            Controller.succeeded()
             var output = socket.getOutputStream()
             var input = BufferedReader(InputStreamReader(socket.getInputStream()))
             if (foreword) output.write(Fun.z(data.size.toString()).encodeToByteArray() + data)

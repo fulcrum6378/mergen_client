@@ -138,18 +138,6 @@ class Fun {
             for (x in 0..(9 - s.length)) add += "0"
             return add + s
         }
-
-        fun whirlRadar(radar: View) {
-            ObjectAnimator.ofFloat(radar, "rotation", 0f, 360f).apply {
-                duration = 2220
-                interpolator = LinearInterpolator()
-                addListener(object : AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: Animator) {
-                        whirlRadar(radar)
-                    }
-                })
-            }.start()
-        }
     }
 
     enum class Fonts(val path: String) {

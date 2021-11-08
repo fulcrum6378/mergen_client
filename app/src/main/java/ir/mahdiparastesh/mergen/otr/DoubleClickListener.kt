@@ -1,5 +1,3 @@
-@file:Suppress("unused")
-
 package ir.mahdiparastesh.mergen.otr
 
 import android.os.SystemClock

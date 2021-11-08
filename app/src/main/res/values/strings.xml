@@ -7,9 +7,6 @@
     <string name="proHint">.....</string>
 
     <!-- rec -->
-    <string name="recDefIP">"192.168.1.10:3772</string>
-    <string name="recConnect">Connect to Mergen Server</string>
-    <string name="recConnectIP">Please enter the server\'s IP address&#8230;</string>
     <string name="recConnectErr">Connection Failed</string>
     <string name="recSocketErr">Could not connect to the remote %1$s socket at %2$s!</string>
     <string name="recSocketUnknownErr">%1$s in %2$s socket!</string>

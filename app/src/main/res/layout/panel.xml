@@ -102,45 +102,69 @@
     <ImageView
         style="@style/fakeRadius"
         android:rotation="-90"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/address"
         app:layout_constraintLeft_toLeftOf="parent" />
 
     <ImageView
         style="@style/fakeRadius"
         android:rotation="180"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/address"
         app:layout_constraintRight_toRightOf="parent" />
 
 
     <ImageView
-        android:id="@+id/record"
-        style="@style/match"
-        android:layout_width="66dp"
-        android:layout_height="66dp"
-        android:alpha="0.5"
+        android:id="@+id/overflow"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:layout_margin="10dp"
         android:background="@drawable/round_button_1"
-        android:clickable="false"
-        app:layout_constraintVertical_bias="0.88" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/recording"
         android:layout_width="120dp"
         android:layout_height="120dp"
-        android:alpha="0.5"
+        android:layout_margin="10dp"
         android:scaleX="0"
         android:scaleY="0"
         android:src="@drawable/indicator_1"
         android:visibility="invisible"
-        app:layout_constraintBottom_toBottomOf="@id/record"
-        app:layout_constraintLeft_toLeftOf="@id/record"
-        app:layout_constraintRight_toRightOf="@id/record"
-        app:layout_constraintTop_toTopOf="@id/record" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <View
-        android:id="@+id/radar"
-        style="@style/match"
+    <LinearLayout
+        android:id="@+id/address"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:alpha="0.85"
-        android:background="@drawable/radar" />
+        android:layout_height="wrap_content"
+        android:background="@color/CPO"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:paddingHorizontal="30dp"
+        android:paddingVertical="15dp"
+        android:weightSum="49"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <EditText
+            android:id="@+id/address1"
+            style="@style/addressET" />
+
+        <TextView style="@style/addressPoint" />
+
+        <EditText
+            android:id="@+id/address2"
+            style="@style/addressET" />
+
+        <TextView style="@style/addressPoint" />
+
+        <EditText
+            android:id="@+id/address3"
+            style="@style/addressET" />
+
+        <TextView style="@style/addressPoint" />
+
+        <EditText
+            android:id="@+id/address4"
+            style="@style/addressET" />
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
