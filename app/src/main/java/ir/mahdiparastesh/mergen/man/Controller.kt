@@ -14,6 +14,7 @@ import ir.mahdiparastesh.mergen.otr.AlertDialogue
 class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     private var con = Connect(conPort)
     val rec = Recorder(that, bPreview)
+    var begun = false
 
     companion object {
         const val camPerm = Manifest.permission.CAMERA
@@ -87,8 +88,9 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
             }
         }
         when {
-            wrong -> {
-            }
+            wrong -> AlertDialogue.alertDialogue1(
+                that, R.string.recConnectErr, c.getString(R.string.recAddressErr)
+            )
             unknown != null -> AlertDialogue.alertDialogue1(
                 that, R.string.recConnectErr,
                 c.getString(R.string.recSocketUnknownErr, unknown, whichSock)
@@ -102,6 +104,7 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
                 c.getString(R.string.recSocketErr, whichSock, whichAddr)
             )
         }
+        if (!sentNull) Panel.handler?.obtainMessage(Panel.Action.WRONG.ordinal)?.sendToTarget()
     }
 
 
@@ -117,7 +120,8 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     }
 
     override fun begin() {
-        if (rec.recording) return
+        if (begun && rec.recording) return
+        begun = true
         var ended = false
         val run = Thread {
             if (con.send(Notify.START.s, foreword = false, receive = true) == "true")
@@ -140,7 +144,8 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     }
 
     override fun end() {
-        if (!rec.recording) return
+        if (!begun && !rec.recording) return
+        begun = false
         rec.end()
         Thread { con.send(Notify.STOP.s, foreword = false, receive = true) }.start()
         toggling = false

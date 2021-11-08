@@ -11,4 +11,5 @@
     <color name="response">#66222222</color>
     <color name="ADBG">@color/CPO</color>
     <color name="ADTC">@color/CP</color>
+    <color name="error">#E00</color>
 </resources>

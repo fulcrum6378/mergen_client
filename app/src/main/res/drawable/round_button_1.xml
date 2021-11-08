@@ -3,7 +3,7 @@
     android:color="@color/CSV">
     <item>
         <shape android:shape="oval">
-            <solid android:color="@color/CPO" />
+            <solid android:color="#01FFFFFF" />
         </shape>
     </item>
 </ripple>

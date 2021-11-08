@@ -7,7 +7,8 @@
     <string name="proHint">.....</string>
 
     <!-- rec -->
-    <string name="recConnectErr">Connection Failed</string>
+    <string name="recConnectErr">Connection failed!</string>
+    <string name="recAddressErr">Wrong address!</string>
     <string name="recSocketErr">Could not connect to the remote %1$s socket at %2$s!</string>
     <string name="recSocketUnknownErr">%1$s in %2$s socket!</string>
     <string name="recSocketSentNull">Cannot send NULL in %1$s socket!</string>

@@ -7,8 +7,12 @@ import android.net.Uri
 import android.os.*
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.animation.Animation
+import android.view.animation.LinearInterpolator
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.get
 import androidx.lifecycle.ViewModelProvider
 import ir.mahdiparastesh.mergen.Fun.Companion.permResult
 import ir.mahdiparastesh.mergen.Fun.Companion.sp
@@ -17,7 +21,6 @@ import ir.mahdiparastesh.mergen.man.Connect
 import ir.mahdiparastesh.mergen.man.Controller
 import ir.mahdiparastesh.mergen.otr.DoubleClickListener
 import ir.mahdiparastesh.mergen.pro.Writer
-import java.lang.StringBuilder
 
 // adb connect 192.168.1.20:
 // python C:\Users\fulcr\Projects\mergen\main.py
@@ -59,10 +62,15 @@ class Panel : AppCompatActivity() {
                         Toast.makeText(Fun.c, "INVALID MESSAGE", Toast.LENGTH_SHORT).show()
                     }
                     Action.SOCKET_ERROR.ordinal -> man.socketError(msg.obj as Connect.Error)
-                    Action.TOGGLE.ordinal -> anRecording =
-                        if (msg.obj as Boolean) Fun.whirl(b.recording, null)
-                        else Fun.whirl(b.recording, anRecording)
+                    Action.TOGGLE.ordinal -> {
+                        Fun.shift(
+                            b.recording,
+                            if (msg.obj as Boolean) R.drawable.indicator_1 else R.drawable.radar
+                        )
+                        Fun.vis(b.address, !(msg.obj as Boolean))
+                    }
                     Action.FORCE_REC.ordinal -> man.rec.begin()
+                    Action.WRONG.ordinal -> addrColour(true)
                 }
             }
         }
@@ -84,11 +92,9 @@ class Panel : AppCompatActivity() {
                 override fun beforeTextChanged(s: CharSequence?, r: Int, c: Int, a: Int) {}
                 override fun onTextChanged(s: CharSequence?, r: Int, b: Int, c: Int) {}
                 override fun afterTextChanged(s: Editable?) {
-                    if (adrETs.all { et -> et.text.toString().isNotEmpty() }) man.begin()
-                    else if (i == adrETs.size - 1 && s.toString().length == 3) {
-                        val next = adrETs[i + 1]
-                        if (next.text.isEmpty()) next.requestFocus()
-                    }
+                    if (errColoured) addrColour()
+                    if (i != adrETs.size - 1 && s.toString().length == 3)
+                        adrETs[i + 1].apply { if (text.isEmpty()) requestFocus() }
                 }
             })
         }
@@ -101,10 +107,13 @@ class Panel : AppCompatActivity() {
             }
         })
         b.recording.colorFilter = Fun.cf(R.color.CPO)
-
-        // Overflow Menu
-        b.overflow.setOnClickListener {
+        anRecording = ObjectAnimator.ofFloat(b.recording, "rotation", 0f, 360f).apply {
+            duration = 522
+            interpolator = LinearInterpolator()
+            repeatCount = Animation.INFINITE
+            start()
         }
+        b.recording.setOnClickListener { }
     }
 
     override fun onResume() {
@@ -140,5 +149,12 @@ class Panel : AppCompatActivity() {
         }
     }
 
-    enum class Action { WRITE, TALK, TOAST, SOCKET_ERROR, TOGGLE, FORCE_REC }
+    var errColoured = false
+    fun addrColour(red: Boolean = false) {
+        errColoured = red
+        for (x in 0 until b.address.childCount) if (b.address[x] is TextView)
+            (b.address[x] as TextView).setTextColor(Fun.color(if (red) R.color.error else R.color.CS))
+    }
+
+    enum class Action { WRITE, TALK, TOAST, SOCKET_ERROR, TOGGLE, FORCE_REC, WRONG }
 }

@@ -17,11 +17,11 @@ import android.util.DisplayMetrics
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 
-@Suppress("unused")
 class Fun {
     companion object {
         @SuppressLint("StaticFieldLeak")
@@ -61,6 +61,26 @@ class Fun {
 
         fun vish(v: View, b: Boolean = true) {
             v.visibility = if (b) View.VISIBLE else View.INVISIBLE
+        }
+
+        fun shift(v: ImageView, newRes: Int) {
+            /*AnimatorSet().apply {
+                duration = 192
+                interpolator = LinearInterpolator()
+                playTogether(
+                    ObjectAnimator.ofFloat(v, "scaleX", 0f),
+                    ObjectAnimator.ofFloat(v, "scaleY", 0f),
+                    ObjectAnimator.ofFloat(v, "rotation", -360f)
+                )
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator?) {*/
+                        v.setImageResource(newRes)
+                        /*reverse()
+                        start()
+                    }
+                })
+                start()
+            }*/
         }
 
         fun drown(v: View, bb: Boolean = false) {
