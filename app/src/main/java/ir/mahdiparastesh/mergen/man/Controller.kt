@@ -12,6 +12,7 @@ import ir.mahdiparastesh.mergen.Fun.Companion.sp
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.R
 import ir.mahdiparastesh.mergen.otr.AlertDialogue
+import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 
 class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
@@ -47,12 +48,13 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
 
     init {
         c.resources.openRawResource(R.raw.manifest).apply {
-            manifest =
-                Gson().fromJson(JsonReader(InputStreamReader(this)), DevManifest::class.java)
             baManifest = readBytes()
             close()
+            manifest = Gson().fromJson(
+                JsonReader(InputStreamReader(ByteArrayInputStream(baManifest))),
+                DevManifest::class.java
+            )
         }
-
 
         if (!permGranted(audPerm) || !permGranted(visPerm))
             ActivityCompat.requestPermissions(that, arrayOf(audPerm, visPerm), req)
@@ -73,18 +75,14 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
 
     fun acknowledge(times: Byte = 0) {
         if (!sp.contains(spDeviceId)) {
-            val sigAckn = con.send(
-                Notify.ACKN.s.plus(baManifest!!), foreword = false, receive = true
-            )
+            val sigAckn =
+                con.send(Notify.ACKN.s.plus(baManifest!!), foreword = false, receive = true)
             sp.edit().apply {
                 putString(spDeviceId, sigAckn)
                 apply()
             }
         }
-        val sigInit = con.send(
-            Notify.INIT.s.plus(sp.getString(spDeviceId, "")!!.encodeToByteArray()),
-            foreword = false, receive = true
-        )
+        val sigInit = con.send(Notify.INIT.s.plus(queryId()), foreword = false, receive = true)
         if (sigInit == "false") acknowledge((times + 1).toByte())
         else if (sigInit?.startsWith("true") == true) {
             val ports = sigInit.substring(4).split(",")
@@ -95,6 +93,8 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
             }
         }
     }
+
+    fun queryId() = sp.getString(spDeviceId, "")!!.encodeToByteArray()
 
     override fun on() {
         rec.on()
@@ -127,7 +127,7 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
         if (!begun && !rec.recording) return
         begun = false
         rec.end()
-        Thread { con.send(Notify.HALT.s, foreword = false, receive = true) }.start()
+        Thread { con.send(Notify.HALT.s.plus(queryId()), foreword = false, receive = true) }.start()
         toggling = false
     }
 
