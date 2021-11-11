@@ -1,0 +1,14 @@
+{
+  "OS": "Android",
+  "sensors": [
+    {
+      "type": "toc"
+    },
+    {
+      "type": "vis"
+    },
+    {
+      "type": "aud"
+    }
+  ]
+}

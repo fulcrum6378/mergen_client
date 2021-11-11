@@ -7,12 +7,12 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.Socket
 
-class Connect(val portAdd: Int = 0) {
+class Connect(val port: Int = Controller.port) {
     fun send(data: ByteArray?, foreword: Boolean = true, receive: Boolean = false): String? {
         var ret: String? = null
         if (data == null) error("false")
         else try {
-            var socket = Socket(Controller.host, Controller.port + portAdd)
+            var socket = Socket(Controller.host, port)
             Controller.succeeded()
             var output = socket.getOutputStream()
             var input = BufferedReader(InputStreamReader(socket.getInputStream()))
@@ -31,9 +31,11 @@ class Connect(val portAdd: Int = 0) {
     }
 
     fun error(sent: String) {
-        handler?.obtainMessage(Panel.Action.SOCKET_ERROR.ordinal, Error(sent, portAdd))
+        handler?.obtainMessage(Panel.Action.SOCKET_ERROR.ordinal, Error(sent, port))
             ?.sendToTarget()
     }
 
-    data class Error(val e: String, val portAdd: Int, val byController: Boolean = portAdd == 0)
+    data class Error(
+        val e: String, val port: Int, val byController: Boolean = port == Controller.port
+    )
 }

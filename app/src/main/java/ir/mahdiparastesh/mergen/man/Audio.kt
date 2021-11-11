@@ -4,7 +4,7 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 
-class Hearing : Thread() {
+class Audio : Thread() {
     private var recorder: AudioRecord? = null
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
     private val audioFormat = AudioFormat.ENCODING_PCM_16BIT
@@ -13,7 +13,7 @@ class Hearing : Thread() {
         AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)// 1000000
     private var time: Long = 0L
     var active = true
-    var pool = StreamPool(Connect(Controller.earPort))
+    var pool = StreamPool(Connect(Controller.audPort))
 
     companion object {
         const val sampleRate = 44100

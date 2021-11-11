@@ -32,7 +32,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     var canPreview = false
     var previewing = false
     var recording = false
-    var ear: Hearing? = null
+    var aud: Audio? = null
     var time: Long = 0L
     var pool: StreamPool? = null
 
@@ -94,7 +94,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
         time = 0L
         c.cacheDir.listFiles()?.forEach { it.delete() }
         recording = true
-        ear = Hearing().apply { start() }
+        aud = Audio().apply { start() }
         handler?.obtainMessage(Action.TOGGLE.ordinal, true)?.sendToTarget()
         capture()
     }
@@ -139,15 +139,15 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
         if (recording) handler?.obtainMessage(Action.TOGGLE.ordinal, false)?.sendToTarget()
         recording = false
         pool?.clear()
-        ear?.pool?.clear()
-        ear?.interrupt()
-        ear = null
+        aud?.pool?.clear()
+        aud?.interrupt()
+        aud = null
     }
 
     override fun destroy() {
         if (!canPreview) return
         cameraExecutor.shutdown()
         pool?.destroy()
-        ear?.pool?.destroy()
+        aud?.pool?.destroy()
     }
 }

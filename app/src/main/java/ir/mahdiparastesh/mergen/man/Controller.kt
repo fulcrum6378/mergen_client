@@ -4,32 +4,38 @@ import android.Manifest
 import android.os.CountDownTimer
 import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
+import com.google.gson.Gson
+import com.google.gson.stream.JsonReader
 import ir.mahdiparastesh.mergen.Fun.Companion.c
 import ir.mahdiparastesh.mergen.Fun.Companion.permGranted
 import ir.mahdiparastesh.mergen.Fun.Companion.sp
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.R
 import ir.mahdiparastesh.mergen.otr.AlertDialogue
+import java.io.InputStreamReader
 
 class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
-    private var con = Connect(conPort)
+    private var con = Connect()
+    private var manifest: DevManifest? = null
+    private var baManifest: ByteArray? = null
     val rec = Recorder(that, bPreview)
     var begun = false
 
     companion object {
-        const val camPerm = Manifest.permission.CAMERA
         const val audPerm = Manifest.permission.RECORD_AUDIO
+        const val visPerm = Manifest.permission.CAMERA
         const val req = 786
         const val spHost = "host"
         const val socketErrorTO = 1000L
-        const val conPort = 0
-        const val visPort = 1
-        const val earPort = 2
         const val conTimeout = 1500L
         const val port = 3772
+        const val spDeviceId = "device_id"
         val socketErrors = ArrayList<Connect.Error>()
         var socketErrorTimer: CountDownTimer? = null
         var host = "127.0.0.1"
+        var audPort = 0
+        var tocPort = 0
+        var visPort = 0
 
         fun succeeded() {
             sp.edit().apply {
@@ -40,14 +46,98 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     }
 
     init {
-        if (!permGranted(camPerm) || !permGranted(audPerm))
-            ActivityCompat.requestPermissions(that, arrayOf(camPerm, audPerm), req)
+        c.resources.openRawResource(R.raw.manifest).apply {
+            manifest =
+                Gson().fromJson(JsonReader(InputStreamReader(this)), DevManifest::class.java)
+            baManifest = readBytes()
+            close()
+        }
+
+
+        if (!permGranted(audPerm) || !permGranted(visPerm))
+            ActivityCompat.requestPermissions(that, arrayOf(audPerm, visPerm), req)
         else permitted()
     }
 
     fun permitted() {
         rec.canPreview = true
         on()
+    }
+
+    var toggling = false
+    fun toggle() {
+        if (socketErrorTimer != null || toggling || !rec.previewing) return
+        toggling = true
+        if (!rec.recording) begin() else end()
+    }
+
+    fun acknowledge(times: Byte = 0) {
+        if (!sp.contains(spDeviceId)) {
+            val sigAckn = con.send(
+                Notify.ACKN.s.plus(baManifest!!), foreword = false, receive = true
+            )
+            sp.edit().apply {
+                putString(spDeviceId, sigAckn)
+                apply()
+            }
+        }
+        val sigInit = con.send(
+            Notify.INIT.s.plus(sp.getString(spDeviceId, "")!!.encodeToByteArray()),
+            foreword = false, receive = true
+        )
+        if (sigInit == "false") acknowledge((times + 1).toByte())
+        else if (sigInit?.startsWith("true") == true) {
+            val ports = sigInit.substring(4).split(",")
+            for (s in manifest!!.sensors.indices) when (manifest!!.sensors[s].type) {
+                "aud" -> audPort = ports[s].toInt()
+                "toc" -> tocPort = ports[s].toInt()
+                "vis" -> visPort = ports[s].toInt()
+            }
+        }
+    }
+
+    override fun on() {
+        rec.on()
+    }
+
+    override fun begin() {
+        if (begun && rec.recording) return
+        begun = true
+        var ended = false
+        val run = Thread {
+            acknowledge()
+            Panel.handler?.obtainMessage(Panel.Action.FORCE_REC.ordinal)?.sendToTarget()
+            ended = true
+        }
+        object : CountDownTimer(conTimeout, conTimeout) {
+            override fun onTick(millisUntilFinished: Long) {}
+            override fun onFinish() {
+                if (ended) return
+                run.interrupt()
+                Panel.handler?.obtainMessage(
+                    Panel.Action.SOCKET_ERROR.ordinal, Connect.Error("timedOut", port)
+                )?.sendToTarget()
+            }
+        }.start()
+        run.start()
+        toggling = false
+    }
+
+    override fun end() {
+        if (!begun && !rec.recording) return
+        begun = false
+        rec.end()
+        Thread { con.send(Notify.HALT.s, foreword = false, receive = true) }.start()
+        toggling = false
+    }
+
+    override fun off() {
+        rec.off()
+        Thread { con.send(Notify.KILL.s, foreword = false, receive = true) }.start()
+    }
+
+    override fun destroy() {
+        rec.destroy()
     }
 
     fun socketError(e: Connect.Error) {
@@ -72,11 +162,11 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
         var unknown: String? = null
         var sentNull = false
         for (e in socketErrors) {
-            whichAddr = "$host:${port + e.portAdd}"
-            whichSock = when (e.portAdd) {
-                conPort -> "controller"
+            whichAddr = "$host:${e.port}"
+            whichSock = when (e.port) {
+                port -> "controller"
+                audPort -> "audio"
                 visPort -> "picture"
-                earPort -> "audio"
                 else -> whichSock
             }
             when (e.e) {
@@ -108,62 +198,10 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
     }
 
 
-    var toggling = false
-    fun toggle() {
-        if (socketErrorTimer != null || toggling || !rec.previewing) return
-        toggling = true
-        if (!rec.recording) begin() else end()
-    }
-
-    override fun on() {
-        rec.on()
-    }
-
-    override fun begin() {
-        if (begun && rec.recording) return
-        begun = true
-        var ended = false
-        val run = Thread {
-            if (con.send(Notify.START.s, foreword = false, receive = true) == "true")
-                Panel.handler?.obtainMessage(Panel.Action.FORCE_REC.ordinal)?.sendToTarget()
-            ended = true
-        }
-        object : CountDownTimer(conTimeout, conTimeout) {
-            override fun onTick(millisUntilFinished: Long) {}
-            override fun onFinish() {
-                if (ended) return
-                run.interrupt()
-                Panel.handler?.obtainMessage(
-                    Panel.Action.SOCKET_ERROR.ordinal,
-                    Connect.Error("timedOut", port + con.portAdd)
-                )?.sendToTarget()
-            }
-        }.start()
-        run.start()
-        toggling = false
-    }
-
-    override fun end() {
-        if (!begun && !rec.recording) return
-        begun = false
-        rec.end()
-        Thread { con.send(Notify.STOP.s, foreword = false, receive = true) }.start()
-        toggling = false
-    }
-
-    override fun off() {
-        rec.off()
-        Thread { con.send(Notify.KILL.s, foreword = false, receive = true) }.start()
-    }
-
-    override fun destroy() {
-        rec.destroy()
-    }
-
-
     enum class Notify(val s: ByteArray) {
-        START("start".encodeToByteArray()),
-        STOP("stop".encodeToByteArray()),
+        ACKN("ackn".encodeToByteArray()),
+        INIT("init".encodeToByteArray()),
+        HALT("halt".encodeToByteArray()),
         KILL("kill".encodeToByteArray())
     }
 }
