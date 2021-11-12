@@ -14,6 +14,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.get
 import androidx.lifecycle.ViewModelProvider
+import ir.mahdiparastesh.mergen.Fun.Companion.c
 import ir.mahdiparastesh.mergen.Fun.Companion.permResult
 import ir.mahdiparastesh.mergen.Fun.Companion.sp
 import ir.mahdiparastesh.mergen.databinding.PanelBinding
@@ -57,9 +58,9 @@ class Panel : AppCompatActivity() {
                         mp?.setOnCompletionListener { mp?.release(); mp = null }
                     }
                     Action.TOAST.ordinal -> try {
-                        Toast.makeText(Fun.c, msg.obj as String, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(c, msg.obj as String, Toast.LENGTH_SHORT).show()
                     } catch (ignored: Exception) {
-                        Toast.makeText(Fun.c, "INVALID MESSAGE", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(c, "INVALID MESSAGE", Toast.LENGTH_SHORT).show()
                     }
                     Action.SOCKET_ERROR.ordinal -> man.socketError(msg.obj as Connect.Error)
                     Action.TOGGLE.ordinal -> {
@@ -71,12 +72,20 @@ class Panel : AppCompatActivity() {
                     }
                     Action.FORCE_REC.ordinal -> man.rec.begin()
                     Action.WRONG.ordinal -> addrColour(true)
+                    Action.PORTS.ordinal -> {
+                        val ports = msg.obj as List<String>
+                        for (s in man.manifest!!.sensors.indices) when (man.manifest!!.sensors[s].type) {
+                            "aud" -> m.audPort.value = ports[s].toInt()
+                            "toc" -> m.tocPort.value = ports[s].toInt()
+                            "vis" -> m.visPort.value = ports[s].toInt()
+                        }
+                    }
                 }
             }
         }
 
         // INITIALIZATION
-        man = Controller(this, b.preview)
+        man = Controller(this, m, b.preview)
         pro = Writer(this, m, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
 
         // Connection
@@ -102,7 +111,7 @@ class Panel : AppCompatActivity() {
             override fun onDoubleClick() {
                 val ar = arrayListOf<String>()
                 adrETs.forEach { e -> ar.add(e.text.toString()) }
-                Controller.host = ar.joinToString(".")
+                m.host.value = ar.joinToString(".")
                 man.toggle()
             }
         })
@@ -156,5 +165,5 @@ class Panel : AppCompatActivity() {
             (b.address[x] as TextView).setTextColor(Fun.color(if (red) R.color.error else R.color.CS))
     }
 
-    enum class Action { WRITE, TALK, TOAST, SOCKET_ERROR, TOGGLE, FORCE_REC, WRONG }
+    enum class Action { WRITE, TALK, TOAST, SOCKET_ERROR, TOGGLE, FORCE_REC, WRONG, PORTS }
 }

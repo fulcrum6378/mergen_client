@@ -1,5 +1,6 @@
 package ir.mahdiparastesh.mergen.man
 
+import android.annotation.SuppressLint
 import android.os.CountDownTimer
 import android.util.Rational
 import android.util.Size
@@ -15,13 +16,13 @@ import ir.mahdiparastesh.mergen.Fun.Companion.vish
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.Panel.Action
 import ir.mahdiparastesh.mergen.Panel.Companion.handler
-import kotlinx.coroutines.runBlocking
-import java.io.File
-import java.io.FileInputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import android.graphics.Bitmap
+import ir.mahdiparastesh.mergen.Model
+import java.io.ByteArrayOutputStream
 
-class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
+class Recorder(val that: Panel, val m: Model, val bPreview: PreviewView) : ToRecord {
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var cameraProvider: ProcessCameraProvider
     private lateinit var useCaseGroup: UseCaseGroup
@@ -37,13 +38,14 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     var pool: StreamPool? = null
 
     companion object {
-        const val FRAME = 1L // 50L
+        const val FRAME = 1000L
         val size = Size(800, 400)
     }
 
+    @SuppressLint("RestrictedApi")
     override fun on() {
         if (!canPreview || previewing) return
-        pool = StreamPool(Connect(Controller.visPort))
+        pool = StreamPool(Connect(m.host, m.visPort))
         vish(bPreview)
         previewing = true
         cameraProviderFuture = ProcessCameraProvider.getInstance(c)
@@ -86,46 +88,23 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
         previewing = false
         preview.setSurfaceProvider(null)
         bPreview.removeAllViews()
-        pool?.destroy()
+        pool?.clear()
         pool = null
     }
 
     override fun begin() {
         time = 0L
-        c.cacheDir.listFiles()?.forEach { it.delete() }
         recording = true
-        aud = Audio().apply { start() }
+        aud = Audio(m).apply { start() }
         handler?.obtainMessage(Action.TOGGLE.ordinal, true)?.sendToTarget()
         capture()
     }
 
     fun capture() {
         if (!recording) return
-        val vis = File(c.cacheDir, "$time.jpg")
-        imageCapture.takePicture(ImageCapture.OutputFileOptions.Builder(vis).build(),
-            cameraExecutor, object : ImageCapture.OnImageSavedCallback {
-                // NOT UI THREAD
-                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                    if (!recording) return
-                    runBlocking {
-                        FileInputStream(vis).use {
-                            pool?.add(StreamPool.Item(time, it.readBytes()))
-                            it.close()
-                        }
-                    }
-                    try {
-                        vis.delete()
-                    } catch (e: Exception) {
-                    }
-                }
-
-                override fun onError(error: ImageCaptureException) {
-                    if (!recording) return
-                    handler?.obtainMessage(
-                        Action.TOAST.ordinal, "ImageCaptureException: ${error.message}"
-                    )?.sendToTarget()
-                }
-            })
+        val stream = ByteArrayOutputStream()
+        bPreview.bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+        pool?.add(StreamPool.Item(time, stream.toByteArray()))
         time++
         object : CountDownTimer(FRAME, FRAME) {
             override fun onTick(millisUntilFinished: Long) {}
@@ -134,6 +113,20 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
             }
         }.start()
     }
+
+    /*imageCapture.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
+            override fun onCaptureSuccess(proxy: ImageProxy) {
+                pool?.add(StreamPool.Item(time, !!! proxy !!!))
+                proxy.close()
+            }
+
+            override fun onError(e: ImageCaptureException) {
+                if (!recording) return
+                handler?.obtainMessage(
+                    Action.TOAST.ordinal, "ImageCaptureException: ${e.message}"
+                )?.sendToTarget()
+            }
+        })*/
 
     override fun end() {
         if (recording) handler?.obtainMessage(Action.TOGGLE.ordinal, false)?.sendToTarget()
@@ -147,7 +140,7 @@ class Recorder(val that: Panel, val bPreview: PreviewView) : ToRecord {
     override fun destroy() {
         if (!canPreview) return
         cameraExecutor.shutdown()
-        pool?.destroy()
-        aud?.pool?.destroy()
+        pool?.clear()
+        aud?.pool?.clear()
     }
 }

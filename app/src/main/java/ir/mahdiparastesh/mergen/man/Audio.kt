@@ -3,8 +3,9 @@ package ir.mahdiparastesh.mergen.man
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
+import ir.mahdiparastesh.mergen.Model
 
-class Audio : Thread() {
+class Audio(val m: Model) : Thread() {
     private var recorder: AudioRecord? = null
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
     private val audioFormat = AudioFormat.ENCODING_PCM_16BIT
@@ -13,7 +14,7 @@ class Audio : Thread() {
         AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)// 1000000
     private var time: Long = 0L
     var active = true
-    var pool = StreamPool(Connect(Controller.audPort))
+    var pool = StreamPool(Connect(m.host, m.audPort))
 
     companion object {
         const val sampleRate = 44100

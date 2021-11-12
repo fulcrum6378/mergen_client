@@ -1,5 +1,6 @@
 package ir.mahdiparastesh.mergen.man
 
+import androidx.lifecycle.MutableLiveData
 import ir.mahdiparastesh.mergen.Fun
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.Panel.Companion.handler
@@ -7,13 +8,17 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.Socket
 
-class Connect(val port: Int = Controller.port) {
+class Connect(val host: MutableLiveData<String>, val port: Any) {
+    var portValue = 0
+
     fun send(data: ByteArray?, foreword: Boolean = true, receive: Boolean = false): String? {
+        handler?.obtainMessage(Panel.Action.TOAST.ordinal, "SENT: ${data?.size}")?.sendToTarget()
+        portValue = if (port is Int) port else (port as MutableLiveData<Int>).value!!
         var ret: String? = null
         if (data == null) error("false")
         else try {
-            var socket = Socket(Controller.host, port)
-            Controller.succeeded()
+            var socket = Socket(host.value, portValue)
+            if (portValue == Controller.port) Controller.succeeded(host.value!!)
             var output = socket.getOutputStream()
             var input = BufferedReader(InputStreamReader(socket.getInputStream()))
             if (foreword) output.write(Fun.z(data.size.toString()).encodeToByteArray() + data)
@@ -31,7 +36,7 @@ class Connect(val port: Int = Controller.port) {
     }
 
     fun error(sent: String) {
-        handler?.obtainMessage(Panel.Action.SOCKET_ERROR.ordinal, Error(sent, port))
+        handler?.obtainMessage(Panel.Action.SOCKET_ERROR.ordinal, Error(sent, portValue))
             ?.sendToTarget()
     }
 

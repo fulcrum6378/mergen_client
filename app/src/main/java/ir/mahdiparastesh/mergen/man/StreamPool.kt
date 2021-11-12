@@ -1,29 +1,18 @@
 package ir.mahdiparastesh.mergen.man
 
-import kotlinx.coroutines.runBlocking
-
 class StreamPool(val con: Connect) : ArrayList<StreamPool.Item>() {
-    val work = Thread { act() }
-    val period = 1000L
-    var active = true
 
-    init {
-        work.start() // Looper.myLooper() != Looper.getMainLooper()
+    override fun add(element: Item): Boolean {
+        Thread {
+            // Everything works fine as far as here
+            con.send(element.data)
+        }.start()
+        return super.add(element)
     }
 
-    fun act() {
-        if (!active) return
-        if (size > 0) {
-            runBlocking { con.send(this@StreamPool[0].data) }
-            removeAt(0)
-        } else Thread.sleep(period)
-        act()
-    }
-
-    fun destroy() {
-        active = false
-        clear()
-        work.interrupt()
+    @Suppress("RedundantOverride")
+    override fun clear() {
+        super.clear()
     }
 
     data class Item(val time: Long, val data: ByteArray)

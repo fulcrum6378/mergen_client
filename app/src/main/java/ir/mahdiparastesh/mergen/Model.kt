@@ -6,6 +6,10 @@ import androidx.lifecycle.ViewModelProvider
 
 class Model : ViewModel() {
     val res: MutableLiveData<String> by lazy { MutableLiveData<String>() }
+    val host: MutableLiveData<String> by lazy { MutableLiveData<String>("127.0.0.1") }
+    val audPort: MutableLiveData<Int> by lazy { MutableLiveData<Int>(0) }
+    val tocPort: MutableLiveData<Int> by lazy { MutableLiveData<Int>(0) }
+    val visPort: MutableLiveData<Int> by lazy { MutableLiveData<Int>(0) }
 
 
     @Suppress("UNCHECKED_CAST")

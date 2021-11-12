@@ -9,17 +9,18 @@ import com.google.gson.stream.JsonReader
 import ir.mahdiparastesh.mergen.Fun.Companion.c
 import ir.mahdiparastesh.mergen.Fun.Companion.permGranted
 import ir.mahdiparastesh.mergen.Fun.Companion.sp
+import ir.mahdiparastesh.mergen.Model
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.R
 import ir.mahdiparastesh.mergen.otr.AlertDialogue
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 
-class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
-    private var con = Connect()
-    private var manifest: DevManifest? = null
+class Controller(val that: Panel, val m: Model, bPreview: PreviewView) : ToRecord {
+    private var con = Connect(m.host, port)
     private var baManifest: ByteArray? = null
-    val rec = Recorder(that, bPreview)
+    val rec = Recorder(that, m, bPreview)
+    var manifest: DevManifest? = null
     var begun = false
 
     companion object {
@@ -33,12 +34,8 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
         const val spDeviceId = "device_id"
         val socketErrors = ArrayList<Connect.Error>()
         var socketErrorTimer: CountDownTimer? = null
-        var host = "127.0.0.1"
-        var audPort = 0
-        var tocPort = 0
-        var visPort = 0
 
-        fun succeeded() {
+        fun succeeded(host: String) {
             sp.edit().apply {
                 putString(spHost, host)
                 apply()
@@ -84,14 +81,9 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
         }
         val sigInit = con.send(Notify.INIT.s.plus(queryId()), foreword = false, receive = true)
         if (sigInit == "false") acknowledge((times + 1).toByte())
-        else if (sigInit?.startsWith("true") == true) {
-            val ports = sigInit.substring(4).split(",")
-            for (s in manifest!!.sensors.indices) when (manifest!!.sensors[s].type) {
-                "aud" -> audPort = ports[s].toInt()
-                "toc" -> tocPort = ports[s].toInt()
-                "vis" -> visPort = ports[s].toInt()
-            }
-        }
+        else if (sigInit?.startsWith("true") == true) Panel.handler?.obtainMessage(
+            Panel.Action.PORTS.ordinal, sigInit.substring(4).split(",")
+        )?.sendToTarget()
     }
 
     fun queryId() = sp.getString(spDeviceId, "")!!.encodeToByteArray()
@@ -162,11 +154,11 @@ class Controller(val that: Panel, bPreview: PreviewView) : ToRecord {
         var unknown: String? = null
         var sentNull = false
         for (e in socketErrors) {
-            whichAddr = "$host:${e.port}"
+            whichAddr = "${m.host.value}:${e.port}"
             whichSock = when (e.port) {
                 port -> "controller"
-                audPort -> "audio"
-                visPort -> "picture"
+                m.audPort.value -> "audio"
+                m.visPort.value -> "picture"
                 else -> whichSock
             }
             when (e.e) {
