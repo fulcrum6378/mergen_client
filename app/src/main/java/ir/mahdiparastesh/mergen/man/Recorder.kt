@@ -88,7 +88,7 @@ class Recorder(val that: Panel, val m: Model, val bPreview: PreviewView) : ToRec
         previewing = false
         preview.setSurfaceProvider(null)
         bPreview.removeAllViews()
-        pool?.clear()
+        pool?.destroy()
         pool = null
     }
 
@@ -114,25 +114,11 @@ class Recorder(val that: Panel, val m: Model, val bPreview: PreviewView) : ToRec
         }.start()
     }
 
-    /*imageCapture.takePicture(cameraExecutor, object : ImageCapture.OnImageCapturedCallback() {
-            override fun onCaptureSuccess(proxy: ImageProxy) {
-                pool?.add(StreamPool.Item(time, !!! proxy !!!))
-                proxy.close()
-            }
-
-            override fun onError(e: ImageCaptureException) {
-                if (!recording) return
-                handler?.obtainMessage(
-                    Action.TOAST.ordinal, "ImageCaptureException: ${e.message}"
-                )?.sendToTarget()
-            }
-        })*/
-
     override fun end() {
         if (recording) handler?.obtainMessage(Action.TOGGLE.ordinal, false)?.sendToTarget()
         recording = false
-        pool?.clear()
-        aud?.pool?.clear()
+        pool?.destroy()
+        aud?.pool?.destroy()
         aud?.interrupt()
         aud = null
     }
@@ -140,7 +126,7 @@ class Recorder(val that: Panel, val m: Model, val bPreview: PreviewView) : ToRec
     override fun destroy() {
         if (!canPreview) return
         cameraExecutor.shutdown()
-        pool?.clear()
-        aud?.pool?.clear()
+        pool?.destroy()
+        aud?.pool?.destroy()
     }
 }

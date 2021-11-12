@@ -158,6 +158,7 @@ class Controller(val that: Panel, val m: Model, bPreview: PreviewView) : ToRecor
             whichSock = when (e.port) {
                 port -> "controller"
                 m.audPort.value -> "audio"
+                m.tocPort.value -> "touch"
                 m.visPort.value -> "picture"
                 else -> whichSock
             }

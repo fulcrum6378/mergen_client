@@ -48,6 +48,7 @@ class Panel : AppCompatActivity() {
 
         // Handlers
         handler = object : Handler(Looper.getMainLooper()) {
+            @Suppress("UNCHECKED_CAST")
             @SuppressLint("SetTextI18n")
             override fun handleMessage(msg: Message) {
                 when (msg.what) {

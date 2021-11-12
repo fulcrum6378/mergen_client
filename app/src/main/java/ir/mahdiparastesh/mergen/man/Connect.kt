@@ -11,8 +11,8 @@ import java.net.Socket
 class Connect(val host: MutableLiveData<String>, val port: Any) {
     var portValue = 0
 
+    @Suppress("UNCHECKED_CAST")
     fun send(data: ByteArray?, foreword: Boolean = true, receive: Boolean = false): String? {
-        handler?.obtainMessage(Panel.Action.TOAST.ordinal, "SENT: ${data?.size}")?.sendToTarget()
         portValue = if (port is Int) port else (port as MutableLiveData<Int>).value!!
         var ret: String? = null
         if (data == null) error("false")
