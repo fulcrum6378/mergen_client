@@ -104,7 +104,7 @@ class Recorder(val that: Panel, val m: Model, val bPreview: PreviewView) : ToRec
         if (!recording) return
         val stream = ByteArrayOutputStream()
         bPreview.bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-        pool?.add(StreamPool.Item(time, stream.toByteArray()))
+        //pool?.add(StreamPool.Item(time, stream.toByteArray()))
         time++
         object : CountDownTimer(FRAME, FRAME) {
             override fun onTick(millisUntilFinished: Long) {}
@@ -118,7 +118,6 @@ class Recorder(val that: Panel, val m: Model, val bPreview: PreviewView) : ToRec
         if (recording) handler?.obtainMessage(Action.TOGGLE.ordinal, false)?.sendToTarget()
         recording = false
         pool?.destroy()
-        aud?.pool?.destroy()
         aud?.interrupt()
         aud = null
     }
@@ -127,6 +126,7 @@ class Recorder(val that: Panel, val m: Model, val bPreview: PreviewView) : ToRec
         if (!canPreview) return
         cameraExecutor.shutdown()
         pool?.destroy()
-        aud?.pool?.destroy()
+        aud?.interrupt()
+        aud = null
     }
 }

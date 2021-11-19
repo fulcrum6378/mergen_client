@@ -149,12 +149,10 @@ class Panel : AppCompatActivity() {
         super.onDestroy()
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String?>, grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        val b = permResult(grantResults)
-        when (requestCode) {
+    override fun onRequestPermissionsResult(req: Int, perm: Array<String?>, grant: IntArray) {
+        super.onRequestPermissionsResult(req, perm, grant)
+        val b = permResult(grant)
+        when (req) {
             Controller.req -> if (b) man.permitted()
         }
     }

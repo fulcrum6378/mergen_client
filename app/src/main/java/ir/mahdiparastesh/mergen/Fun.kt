@@ -21,6 +21,8 @@ import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
 
 class Fun {
     companion object {
@@ -38,7 +40,11 @@ class Fun {
             dm = that.resources.displayMetrics
             dirLtr = c.resources.getBoolean(R.bool.dirLtr)
             if (!dirLtr) root.layoutDirection = View.LAYOUT_DIRECTION_RTL
-            sp =  that.getPreferences(Context.MODE_PRIVATE)
+            sp = EncryptedSharedPreferences.create(
+                "main_prefs", MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC), c,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            ) // that.getPreferences(Context.MODE_PRIVATE)
 
             // Fonts
             fRegular = fonts(Fonts.REGULAR)
