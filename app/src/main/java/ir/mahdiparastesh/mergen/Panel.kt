@@ -123,7 +123,10 @@ class Panel : AppCompatActivity() {
             repeatCount = Animation.INFINITE
             start()
         }
-        b.recording.setOnClickListener { }
+        b.recording.setOnClickListener {
+            if (man.begun) return@setOnClickListener
+            // TODO (with R.drawable.button_1)
+        }
     }
 
     override fun onResume() {
