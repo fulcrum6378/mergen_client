@@ -15,7 +15,7 @@ class StreamPool(val con: Connect) : ArrayList<StreamPool.Item>() {
         if (!active) return
         if (size > 0) {
             runBlocking { con.send(this@StreamPool[0].data) }
-            removeAt(0)
+            if (size > 0) removeAt(0)
         } else try {
             Thread.sleep(period)
         } catch (ignored: InterruptedException) {

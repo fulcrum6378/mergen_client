@@ -3,7 +3,7 @@ package ir.mahdiparastesh.mergen.otr
 import android.os.SystemClock
 import android.view.View
 
-abstract class DoubleClickListener(val span: Long = 200) : View.OnClickListener {
+abstract class DoubleClickListener(val span: Long = 500) : View.OnClickListener {
     private var times: Long = 0
 
     override fun onClick(v: View) {

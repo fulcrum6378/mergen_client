@@ -28,10 +28,10 @@ import ir.mahdiparastesh.mergen.pro.Writer
 
 class Panel : AppCompatActivity() {
     private lateinit var b: PanelBinding
-    private lateinit var m: Model
     private lateinit var pro: Writer
     private lateinit var man: Controller
     private var anRecording: ObjectAnimator? = null
+    lateinit var m: Model
 
     companion object {
         var handler: Handler? = null
@@ -86,7 +86,7 @@ class Panel : AppCompatActivity() {
         }
 
         // INITIALIZATION
-        man = Controller(this, m, b.preview)
+        man = Controller(this, b.preview)
         pro = Writer(this, m, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
 
         // Connection
@@ -127,6 +127,7 @@ class Panel : AppCompatActivity() {
             if (man.begun) return@setOnClickListener
             // TODO (with R.drawable.button_1)
         }
+        m.toggling.observe(this, { bool -> Fun.vis(b.recording, !bool) })
     }
 
     override fun onResume() {

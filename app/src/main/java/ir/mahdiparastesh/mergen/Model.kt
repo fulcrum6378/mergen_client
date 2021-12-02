@@ -10,6 +10,7 @@ class Model : ViewModel() {
     val audPort: MutableLiveData<Int> by lazy { MutableLiveData<Int>(0) }
     val tocPort: MutableLiveData<Int> by lazy { MutableLiveData<Int>(0) }
     val visPort: MutableLiveData<Int> by lazy { MutableLiveData<Int>(0) }
+    val toggling: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>(false) }
 
 
     @Suppress("UNCHECKED_CAST")

@@ -9,17 +9,16 @@ import com.google.gson.stream.JsonReader
 import ir.mahdiparastesh.mergen.Fun.Companion.c
 import ir.mahdiparastesh.mergen.Fun.Companion.permGranted
 import ir.mahdiparastesh.mergen.Fun.Companion.sp
-import ir.mahdiparastesh.mergen.Model
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.R
 import ir.mahdiparastesh.mergen.otr.AlertDialogue
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 
-class Controller(val that: Panel, val m: Model, bPreview: PreviewView) : ToRecord {
-    private var con = Connect(m.host, port)
+class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
+    private var con = Connect(p.m.host, port)
     private var baManifest: ByteArray? = null
-    val rec = Recorder(that, m, bPreview)
+    val rec = Recorder(p, bPreview)
     var manifest: DevManifest? = null
     var begun = false
 
@@ -54,7 +53,7 @@ class Controller(val that: Panel, val m: Model, bPreview: PreviewView) : ToRecor
         }
 
         if (!permGranted(audPerm) || !permGranted(visPerm))
-            ActivityCompat.requestPermissions(that, arrayOf(audPerm, visPerm), req)
+            ActivityCompat.requestPermissions(p, arrayOf(audPerm, visPerm), req)
         else permitted()
     }
 
@@ -63,10 +62,9 @@ class Controller(val that: Panel, val m: Model, bPreview: PreviewView) : ToRecor
         on()
     }
 
-    var toggling = false
     fun toggle() {
-        if (socketErrorTimer != null || toggling || !rec.previewing) return
-        toggling = true
+        if (socketErrorTimer != null || p.m.toggling.value == true || !rec.previewing) return
+        p.m.toggling.value = true
         if (!rec.recording) begin() else end()
     }
 
@@ -81,9 +79,12 @@ class Controller(val that: Panel, val m: Model, bPreview: PreviewView) : ToRecor
         }
         val sigInit = con.send(Notify.INIT.s.plus(queryId()), foreword = false, receive = true)
         if (sigInit == "false") acknowledge((times + 1).toByte())
-        else if (sigInit?.startsWith("true") == true) Panel.handler?.obtainMessage(
-            Panel.Action.PORTS.ordinal, sigInit.substring(4).split(",")
-        )?.sendToTarget()
+        else if (sigInit?.startsWith("true") == true) {
+            Panel.handler?.obtainMessage(
+                Panel.Action.PORTS.ordinal, sigInit.substring(4).split(",")
+            )?.sendToTarget()
+            p.m.toggling.value = false
+        }
     }
 
     fun queryId() = sp.getString(spDeviceId, "")!!.encodeToByteArray()
@@ -109,10 +110,10 @@ class Controller(val that: Panel, val m: Model, bPreview: PreviewView) : ToRecor
                 Panel.handler?.obtainMessage(
                     Panel.Action.SOCKET_ERROR.ordinal, Connect.Error("timedOut", port)
                 )?.sendToTarget()
+                p.m.toggling.value = false
             }
         }.start()
         run.start()
-        toggling = false
     }
 
     override fun end() {
@@ -120,7 +121,7 @@ class Controller(val that: Panel, val m: Model, bPreview: PreviewView) : ToRecor
         begun = false
         rec.end()
         Thread { con.send(Notify.HALT.s.plus(queryId()), foreword = false, receive = true) }.start()
-        toggling = false
+        p.m.toggling.value = false
     }
 
     override fun off() {
@@ -154,17 +155,17 @@ class Controller(val that: Panel, val m: Model, bPreview: PreviewView) : ToRecor
         var unknown: String? = null
         var sentNull = false
         for (e in socketErrors) {
-            whichAddr = "${m.host.value}:${e.port}"
+            whichAddr = "${p.m.host.value}:${e.port}"
             whichSock = when (e.port) {
                 port -> "controller"
-                m.audPort.value -> "audio"
-                m.tocPort.value -> "touch"
-                m.visPort.value -> "picture"
+                p.m.audPort.value -> "audio"
+                p.m.tocPort.value -> "touch"
+                p.m.visPort.value -> "picture"
                 else -> whichSock
             }
             when (e.e) {
                 "java.net.NoRouteToHostException", "java.net.UnknownHostException",
-                "timedOut", "wrongAnswer" -> wrong = true
+                "timedOut" -> wrong = true
                 "java.net.ConnectException" -> conProblem = true
                 "false" -> sentNull = true
                 else -> unknown = e.e
@@ -172,18 +173,18 @@ class Controller(val that: Panel, val m: Model, bPreview: PreviewView) : ToRecor
         }
         when {
             wrong -> AlertDialogue.alertDialogue1(
-                that, R.string.recConnectErr, c.getString(R.string.recAddressErr)
+                p, R.string.recConnectErr, c.getString(R.string.recAddressErr)
             )
             unknown != null -> AlertDialogue.alertDialogue1(
-                that, R.string.recConnectErr,
+                p, R.string.recConnectErr,
                 c.getString(R.string.recSocketUnknownErr, unknown, whichSock)
             )
             sentNull -> AlertDialogue.alertDialogue1(
-                that, R.string.recConnectErr,
+                p, R.string.recConnectErr,
                 c.getString(R.string.recSocketSentNull, whichSock)
             )
             conProblem -> AlertDialogue.alertDialogue1(
-                that, R.string.recConnectErr,
+                p, R.string.recConnectErr,
                 c.getString(R.string.recSocketErr, whichSock, whichAddr)
             )
         }

@@ -1,6 +1,7 @@
 package ir.mahdiparastesh.mergen.man
 
 import android.annotation.SuppressLint
+import android.graphics.Bitmap
 import android.os.CountDownTimer
 import android.util.Rational
 import android.util.Size
@@ -16,13 +17,11 @@ import ir.mahdiparastesh.mergen.Fun.Companion.vish
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.Panel.Action
 import ir.mahdiparastesh.mergen.Panel.Companion.handler
+import java.io.ByteArrayOutputStream
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import android.graphics.Bitmap
-import ir.mahdiparastesh.mergen.Model
-import java.io.ByteArrayOutputStream
 
-class Recorder(val that: Panel, val m: Model, val bPreview: PreviewView) : ToRecord {
+class Recorder(val p: Panel, val bPreview: PreviewView) : ToRecord {
     private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
     private lateinit var cameraProvider: ProcessCameraProvider
     private lateinit var useCaseGroup: UseCaseGroup
@@ -45,7 +44,7 @@ class Recorder(val that: Panel, val m: Model, val bPreview: PreviewView) : ToRec
     @SuppressLint("RestrictedApi")
     override fun on() {
         if (!canPreview || previewing) return
-        pool = StreamPool(Connect(m.host, m.visPort))
+        pool = StreamPool(Connect(p.m.host, p.m.visPort))
         vish(bPreview)
         previewing = true
         cameraProviderFuture = ProcessCameraProvider.getInstance(c)
@@ -60,7 +59,7 @@ class Recorder(val that: Panel, val m: Model, val bPreview: PreviewView) : ToRec
                     .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                     .build()
                 imageCapture = ImageCapture.Builder()
-                    .setTargetRotation(that.resources.configuration.orientation)
+                    .setTargetRotation(p.resources.configuration.orientation)
                     .setMaxResolution(size)
                     .build()
 
@@ -70,10 +69,10 @@ class Recorder(val that: Panel, val m: Model, val bPreview: PreviewView) : ToRec
                     .setViewPort(
                         ViewPort.Builder(
                             Rational(Fun.dm.heightPixels, Fun.dm.widthPixels), // HEIGHT * WIDTH
-                            that.resources.configuration.orientation
+                            p.resources.configuration.orientation
                         ).build()
                     ).build()
-                cameraProvider.bindToLifecycle(that, cameraSelector, useCaseGroup)
+                cameraProvider.bindToLifecycle(p, cameraSelector, useCaseGroup)
                 // "CameraSelector.DEFAULT_BACK_CAMERA" instead of "cameraSelector"
             } catch (e: Exception) {
                 Toast.makeText(c, "CAMERA INIT ERROR: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -95,7 +94,7 @@ class Recorder(val that: Panel, val m: Model, val bPreview: PreviewView) : ToRec
     override fun begin() {
         time = 0L
         recording = true
-        aud = Audio(m).apply { start() }
+        aud = Audio(p).apply { start() }
         handler?.obtainMessage(Action.TOGGLE.ordinal, true)?.sendToTarget()
         capture()
     }

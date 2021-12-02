@@ -4,15 +4,15 @@ import android.annotation.SuppressLint
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
-import ir.mahdiparastesh.mergen.Model
+import ir.mahdiparastesh.mergen.Panel
 import java.nio.ByteBuffer
 
-class Audio(val m: Model) : Thread() {
+class Audio(p: Panel) : Thread() {
     private var recorder: AudioRecord? = null
     private var buffer: ByteBuffer? = null
     private var minBufSize = AudioRecord.getMinBufferSize(sampleRate, chConfig, format) * 2
     private var time: Long = 0L
-    private var pool = StreamPool(Connect(m.host, m.audPort))
+    private var pool = StreamPool(Connect(p.m.host, p.m.audPort))
     var active = true
 
     companion object {
