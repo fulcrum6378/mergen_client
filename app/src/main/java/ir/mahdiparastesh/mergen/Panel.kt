@@ -74,6 +74,7 @@ class Panel : AppCompatActivity() {
                     Action.FORCE_REC.ordinal -> man.rec.begin()
                     Action.WRONG.ordinal -> addrColour(true)
                     Action.PORTS.ordinal -> {
+                        m.toggling.value = false
                         val ports = msg.obj as List<String>
                         for (s in man.manifest!!.sensors.indices) when (man.manifest!!.sensors[s].type) {
                             "aud" -> m.audPort.value = ports[s].toInt()

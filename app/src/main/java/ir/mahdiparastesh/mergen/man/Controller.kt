@@ -68,23 +68,24 @@ class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
         if (!rec.recording) begin() else end()
     }
 
-    fun acknowledge(times: Byte = 0) {
-        if (!sp.contains(spDeviceId)) {
-            val sigAckn =
-                con.send(Notify.ACKN.s.plus(baManifest!!), foreword = false, receive = true)
-            sp.edit().apply {
-                putString(spDeviceId, sigAckn)
-                apply()
-            }
-        }
+    fun initialize() {
+        if (!sp.contains(spDeviceId)) acknowledge()
         val sigInit = con.send(Notify.INIT.s.plus(queryId()), foreword = false, receive = true)
-        if (sigInit == "false") acknowledge((times + 1).toByte())
-        else if (sigInit?.startsWith("true") == true) {
-            Panel.handler?.obtainMessage(
+        when {
+            sigInit == "false" -> acknowledge()
+            sigInit?.startsWith("true") == true -> Panel.handler?.obtainMessage(
                 Panel.Action.PORTS.ordinal, sigInit.substring(4).split(",")
             )?.sendToTarget()
-            p.m.toggling.value = false
+            else -> initialize()
         }
+    }
+
+    fun acknowledge() {
+        val sigAckn = con.send(Notify.ACKN.s.plus(baManifest!!), foreword = false, receive = true)
+        if (sigAckn != null) sp.edit().apply {
+            putString(spDeviceId, sigAckn)
+            apply()
+        } else acknowledge()
     }
 
     fun queryId() = sp.getString(spDeviceId, "")!!.encodeToByteArray()
@@ -98,7 +99,7 @@ class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
         begun = true
         var ended = false
         val run = Thread {
-            acknowledge()
+            initialize()
             Panel.handler?.obtainMessage(Panel.Action.FORCE_REC.ordinal)?.sendToTarget()
             ended = true
         }
@@ -184,8 +185,7 @@ class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
                 c.getString(R.string.recSocketSentNull, whichSock)
             )
             conProblem -> AlertDialogue.alertDialogue1(
-                p, R.string.recConnectErr,
-                c.getString(R.string.recSocketErr, whichSock, whichAddr)
+                p, R.string.recConnectErr, c.getString(R.string.recSocketErr, whichSock, whichAddr)
             )
         }
         if (!sentNull) Panel.handler?.obtainMessage(Panel.Action.WRONG.ordinal)?.sendToTarget()
