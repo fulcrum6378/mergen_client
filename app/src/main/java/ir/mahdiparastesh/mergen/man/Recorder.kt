@@ -1,12 +1,10 @@
 package ir.mahdiparastesh.mergen.man
 
-import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.os.CountDownTimer
-import android.util.Rational
 import android.util.Size
-import android.widget.Toast
-import androidx.camera.core.*
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
@@ -18,17 +16,11 @@ import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.Panel.Action
 import ir.mahdiparastesh.mergen.Panel.Companion.handler
 import java.io.ByteArrayOutputStream
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
-class Recorder(val p: Panel, val bPreview: PreviewView) : ToRecord {
-    private lateinit var cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
-    private lateinit var cameraProvider: ProcessCameraProvider
-    private lateinit var useCaseGroup: UseCaseGroup
+class Recorder(val p: Panel, val view: PreviewView) : ToRecord {
+    private lateinit var camProviderFuture: ListenableFuture<ProcessCameraProvider>
+    private lateinit var camProvider: ProcessCameraProvider
     private lateinit var preview: Preview
-    private lateinit var imageCapture: ImageCapture
-    private lateinit var cameraSelector: CameraSelector
-    private var cameraExecutor: ExecutorService = Executors.newSingleThreadExecutor()
     var canPreview = false
     var previewing = false
     var recording = false
@@ -38,57 +30,24 @@ class Recorder(val p: Panel, val bPreview: PreviewView) : ToRecord {
 
     companion object {
         const val FRAME = 1000L
-        val size = Size(800, 400)
+        val SIZE = Size(Fun.dm.widthPixels, Fun.dm.heightPixels)
     }
 
-    @SuppressLint("RestrictedApi")
     override fun on() {
         if (!canPreview || previewing) return
         pool = StreamPool(Connect(p.m.host, p.m.visPort))
-        vish(bPreview)
+        vish(view)
         previewing = true
-        cameraProviderFuture = ProcessCameraProvider.getInstance(c)
-        cameraProviderFuture.addListener({
-            try {
-                cameraProvider = cameraProviderFuture.get()
-                preview = Preview.Builder()
-                    .setTargetResolution(Size(Fun.dm.widthPixels, Fun.dm.heightPixels))
-                    .build().also { it.setSurfaceProvider(bPreview.surfaceProvider) }
-                cameraProvider.unbindAll()
-                cameraSelector = CameraSelector.Builder()
-                    .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                    .build()
-                imageCapture = ImageCapture.Builder()
-                    .setTargetRotation(p.resources.configuration.orientation)
-                    .setMaxResolution(size)
-                    .build()
-
-                useCaseGroup = UseCaseGroup.Builder()
-                    .addUseCase(preview)
-                    .addUseCase(imageCapture)
-                    .setViewPort(
-                        ViewPort.Builder(
-                            Rational(Fun.dm.heightPixels, Fun.dm.widthPixels), // HEIGHT * WIDTH
-                            p.resources.configuration.orientation
-                        ).build()
-                    ).build()
-                cameraProvider.bindToLifecycle(p, cameraSelector, useCaseGroup)
-                // "CameraSelector.DEFAULT_BACK_CAMERA" instead of "cameraSelector"
-            } catch (e: Exception) {
-                Toast.makeText(c, "CAMERA INIT ERROR: ${e.message}", Toast.LENGTH_SHORT).show()
-                canPreview = false
+        camProviderFuture = ProcessCameraProvider.getInstance(c)
+        camProviderFuture.addListener({
+            preview = Preview.Builder()
+                .setTargetResolution(SIZE)
+                .build().also { it.setSurfaceProvider(view.surfaceProvider) }
+            camProvider = camProviderFuture.get().also {
+                it.unbindAll()
+                it.bindToLifecycle(p, CameraSelector.DEFAULT_BACK_CAMERA, preview)
             }
         }, ContextCompat.getMainExecutor(c))
-    }
-
-    override fun off() {
-        if (!previewing || !canPreview) return
-        vish(bPreview, false)
-        previewing = false
-        preview.setSurfaceProvider(null)
-        bPreview.removeAllViews()
-        pool?.destroy()
-        pool = null
     }
 
     override fun begin() {
@@ -101,9 +60,10 @@ class Recorder(val p: Panel, val bPreview: PreviewView) : ToRecord {
 
     fun capture() {
         if (!recording) return
-        val stream = ByteArrayOutputStream()
-        bPreview.bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-        pool?.add(StreamPool.Item(time, stream.toByteArray()))
+        ByteArrayOutputStream().apply {
+            view.bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, this)
+            pool?.add(toByteArray())
+        }
         time++
         object : CountDownTimer(FRAME, FRAME) {
             override fun onTick(millisUntilFinished: Long) {}
@@ -119,10 +79,20 @@ class Recorder(val p: Panel, val bPreview: PreviewView) : ToRecord {
         aud?.end()
     }
 
+    override fun off() {
+        if (!previewing || !canPreview) return
+        vish(view, false)
+        previewing = false
+        camProvider.unbindAll()
+        preview.setSurfaceProvider(null)
+        view.removeAllViews()
+        pool?.destroy()
+        pool = null
+    }
+
     override fun destroy() {
         if (!canPreview) return
-        cameraExecutor.shutdown()
-        pool?.destroy()
+        off()
         aud?.interrupt()
         aud = null
     }

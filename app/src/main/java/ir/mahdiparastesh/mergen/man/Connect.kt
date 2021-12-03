@@ -8,15 +8,21 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.Socket
 
-class Connect(val host: MutableLiveData<String>, val port: Any) {
-    var portValue = 0
+class Connect(val host: MutableLiveData<String>, port: Any) {
+    val portValue = when (port) {
+        is Int -> port
+        is MutableLiveData<*> -> port.value!! as Int
+        else -> throw IllegalArgumentException("Invalid port argument!")
+    }
 
-    @Suppress("UNCHECKED_CAST")
-    fun send(data: ByteArray?, foreword: Boolean = true, receive: Boolean = false): String? {
-        portValue = if (port is Int) port else (port as MutableLiveData<Int>).value!!
+    fun send(
+        data: ByteArray,
+        foreword: Boolean = true,
+        receive: Boolean = false,
+        reportErrors: Boolean = true
+    ): String? {
         var ret: String? = null
-        if (data == null) error("false")
-        else try {
+        try {
             var socket = Socket(host.value, portValue)
             if (portValue == Controller.port) Controller.succeeded(host.value!!)
             var output = socket.getOutputStream()
@@ -30,7 +36,7 @@ class Connect(val host: MutableLiveData<String>, val port: Any) {
             socket.close()
             System.gc()
         } catch (e: Exception) {
-            error(e.javaClass.name)
+            if (reportErrors) error(e.javaClass.name)
         }
         return ret
     }

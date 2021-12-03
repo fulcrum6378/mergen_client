@@ -10,8 +10,9 @@ import java.nio.ByteBuffer
 class Audio(p: Panel) : Thread() {
     private var recorder: AudioRecord? = null
     private var buffer: ByteBuffer? = null
-    private var minBufSize = AudioRecord.getMinBufferSize(sampleRate, chConfig, format) * 2
-    private var time: Long = 0L
+    private val minBufSize = AudioRecord.getMinBufferSize(sampleRate, chConfig, format) * 2
+    private var time = 0
+    private val frames = arrayListOf<ArrayList<Byte>>(arrayListOf())
     var pool = StreamPool(Connect(p.m.host, p.m.audPort))
     var active = true
 
@@ -27,10 +28,17 @@ class Audio(p: Panel) : Thread() {
         buffer = ByteBuffer.allocateDirect(minBufSize)
         recorder = AudioRecord(src, sampleRate, chConfig, format, minBufSize)
         recorder!!.startRecording()
+        Thread {
+            while (active) {
+                sleep(Recorder.FRAME)
+                frames.add(arrayListOf())
+                time++
+                pool.add(frames[time - 1].toByteArray())
+            }
+        }.start()
         while (active) {
             recorder!!.read(buffer!!, minBufSize)
-            pool.add(StreamPool.Item(time, buffer!!.array()))
-            time++
+            frames[time].addAll(buffer!!.array().toList())
         }
         active = false
     }

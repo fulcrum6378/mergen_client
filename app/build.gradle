@@ -13,7 +13,7 @@ android {
         minSdkVersion 29
         targetSdkVersion 31
         versionCode 1
-        versionName '6.0'
+        versionName '6.2'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -64,5 +64,4 @@ dependencies {
     implementation "androidx.camera:camera-camera2:${camerax_version}"
     implementation "androidx.camera:camera-lifecycle:${camerax_version}"
     implementation "androidx.camera:camera-view:1.0.0-alpha31"
-    implementation "androidx.camera:camera-extensions:1.0.0-alpha31"
 }

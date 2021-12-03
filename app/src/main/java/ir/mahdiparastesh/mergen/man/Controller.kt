@@ -123,18 +123,19 @@ class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
         p.m.toggling.value = true
 
         Thread {
-            while (rec.pool?.active == true || rec.aud?.pool?.active == true)
+            while (rec.pool?.isNotEmpty() == true || rec.aud?.pool?.isNotEmpty() == true)
                 Thread.sleep(500L)
             begun = false
             Thread { con.send(Notify.HALT.s.plus(queryId()), foreword = false, receive = true) }
                 .start()
-            p.m.toggling.value = false
+            Panel.handler?.obtainMessage(Panel.Action.TOGGLING_ENDED.ordinal)?.sendToTarget()
         }.start()
     }
 
     override fun off() {
         rec.off()
-        Thread { con.send(Notify.KILL.s, foreword = false, receive = true) }.start()
+        Thread { con.send(Notify.KILL.s, foreword = false, receive = true, reportErrors = false) }
+            .start()
     }
 
     override fun destroy() {
@@ -161,7 +162,6 @@ class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
         var whichSock = "UNKNOWN"
         var whichAddr = whichSock
         var unknown: String? = null
-        var sentNull = false
         for (e in socketErrors) {
             whichAddr = "${p.m.host.value}:${e.port}"
             whichSock = when (e.port) {
@@ -172,30 +172,21 @@ class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
                 else -> whichSock
             }
             when (e.e) {
-                "java.net.NoRouteToHostException", "java.net.UnknownHostException",
-                "timedOut" -> wrong = true
+                "java.net.NoRouteToHostException", "java.net.UnknownHostException", "timedOut" ->
+                    wrong = true
                 "java.net.ConnectException" -> conProblem = true
-                "false" -> sentNull = true
                 else -> unknown = e.e
             }
         }
-        when {
-            wrong -> AlertDialogue.alertDialogue1(
-                p, R.string.recConnectErr, c.getString(R.string.recAddressErr)
-            )
-            unknown != null -> AlertDialogue.alertDialogue1(
-                p, R.string.recConnectErr,
-                c.getString(R.string.recSocketUnknownErr, unknown, whichSock)
-            )
-            sentNull -> AlertDialogue.alertDialogue1(
-                p, R.string.recConnectErr,
-                c.getString(R.string.recSocketSentNull, whichSock)
-            )
-            conProblem -> AlertDialogue.alertDialogue1(
-                p, R.string.recConnectErr, c.getString(R.string.recSocketErr, whichSock, whichAddr)
-            )
-        }
-        if (!sentNull) Panel.handler?.obtainMessage(Panel.Action.WRONG.ordinal)?.sendToTarget()
+        if (socketErrors.isNotEmpty()) AlertDialogue.alertDialogue1(
+            p, R.string.recConnectErr, when {
+                wrong -> c.getString(R.string.recAddressErr)
+                unknown != null -> c.getString(R.string.recSocketUnknownErr, unknown, whichSock)
+                conProblem -> c.getString(R.string.recSocketErr, whichSock, whichAddr)
+                else -> "" // LOGICALLY IMPOSSIBLE
+            }
+        )
+        Panel.handler?.obtainMessage(Panel.Action.WRONG.ordinal)?.sendToTarget()
     }
 
 

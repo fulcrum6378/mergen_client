@@ -86,6 +86,7 @@ class Panel : AppCompatActivity() {
                             "vis" -> m.visPort.value = ports[s].toInt()
                         }
                     }
+                    Action.TOGGLING_ENDED.ordinal -> m.toggling.value = false
                 }
             }
         }
@@ -190,5 +191,7 @@ class Panel : AppCompatActivity() {
             (b.address[x] as TextView).setTextColor(Fun.color(if (red) R.color.error else R.color.CS))
     }
 
-    enum class Action { WRITE, TALK, TOAST, SOCKET_ERROR, TOGGLE, FORCE_REC, WRONG, PORTS }
+    enum class Action {
+        WRITE, TALK, TOAST, SOCKET_ERROR, TOGGLE, FORCE_REC, WRONG, PORTS, TOGGLING_ENDED
+    }
 }
