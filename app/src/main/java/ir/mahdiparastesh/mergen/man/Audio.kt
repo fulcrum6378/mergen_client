@@ -12,7 +12,7 @@ class Audio(p: Panel) : Thread() {
     private var buffer: ByteBuffer? = null
     private var minBufSize = AudioRecord.getMinBufferSize(sampleRate, chConfig, format) * 2
     private var time: Long = 0L
-    private var pool = StreamPool(Connect(p.m.host, p.m.audPort))
+    var pool = StreamPool(Connect(p.m.host, p.m.audPort))
     var active = true
 
     companion object {
@@ -32,13 +32,17 @@ class Audio(p: Panel) : Thread() {
             pool.add(StreamPool.Item(time, buffer!!.array()))
             time++
         }
+        active = false
     }
 
-    override fun interrupt() {
+    fun end() {
         active = false
         recorder?.stop()
         recorder?.release()
         recorder = null
+    }
+
+    override fun interrupt() {
         pool.destroy()
         super.interrupt()
     }

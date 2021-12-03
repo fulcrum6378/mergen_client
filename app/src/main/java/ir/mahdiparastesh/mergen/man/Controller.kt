@@ -119,10 +119,17 @@ class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
 
     override fun end() {
         if (!begun && !rec.recording) return
-        begun = false
         rec.end()
-        Thread { con.send(Notify.HALT.s.plus(queryId()), foreword = false, receive = true) }.start()
-        p.m.toggling.value = false
+        p.m.toggling.value = true
+
+        Thread {
+            while (rec.pool?.active == true || rec.aud?.pool?.active == true)
+                Thread.sleep(500L)
+            begun = false
+            Thread { con.send(Notify.HALT.s.plus(queryId()), foreword = false, receive = true) }
+                .start()
+            p.m.toggling.value = false
+        }.start()
     }
 
     override fun off() {
