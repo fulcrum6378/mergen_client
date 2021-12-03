@@ -119,7 +119,7 @@
         android:background="@drawable/round_button_1"
         android:src="@drawable/radar"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/say" />
 
     <LinearLayout
         android:id="@+id/address"

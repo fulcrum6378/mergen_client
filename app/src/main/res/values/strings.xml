@@ -2,6 +2,10 @@
     <string name="app_name">Mergen</string>
     <string name="ok">OK</string>
 
+    <!-- Panel Popup -->
+    <string name="ppPro">Legacy Pronouncer</string>
+    <string name="ppShut">Shut Down</string>
+
     <!-- pro -->
     <string name="proError">Traceback</string>
     <string name="proHint">.....</string>

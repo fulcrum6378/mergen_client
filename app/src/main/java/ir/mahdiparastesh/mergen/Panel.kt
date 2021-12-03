@@ -12,11 +12,14 @@ import android.view.animation.LinearInterpolator
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.view.ContextThemeWrapper
+import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.get
 import androidx.lifecycle.ViewModelProvider
 import ir.mahdiparastesh.mergen.Fun.Companion.c
 import ir.mahdiparastesh.mergen.Fun.Companion.permResult
 import ir.mahdiparastesh.mergen.Fun.Companion.sp
+import ir.mahdiparastesh.mergen.Fun.Companion.vis
 import ir.mahdiparastesh.mergen.databinding.PanelBinding
 import ir.mahdiparastesh.mergen.man.Connect
 import ir.mahdiparastesh.mergen.man.Controller
@@ -31,6 +34,7 @@ class Panel : AppCompatActivity() {
     private lateinit var pro: Writer
     private lateinit var man: Controller
     private var anRecording: ObjectAnimator? = null
+    private var proOn = false
     lateinit var m: Model
 
     companion object {
@@ -69,7 +73,7 @@ class Panel : AppCompatActivity() {
                             b.recording,
                             if (msg.obj as Boolean) R.drawable.indicator_1 else R.drawable.radar
                         )
-                        Fun.vis(b.address, !(msg.obj as Boolean))
+                        vis(b.address, !(msg.obj as Boolean))
                     }
                     Action.FORCE_REC.ordinal -> man.rec.begin()
                     Action.WRONG.ordinal -> addrColour(true)
@@ -126,9 +130,26 @@ class Panel : AppCompatActivity() {
         }
         b.recording.setOnClickListener {
             if (man.begun) return@setOnClickListener
-            // TODO (with R.drawable.button_1)
+            PopupMenu(ContextThemeWrapper(c, R.style.Theme_MergenAndroid), it).apply {
+                setOnMenuItemClickListener { item ->
+                    when (item.itemId) {
+                        R.id.ppPro -> {
+                            proOn = !proOn
+                            vis(b.say, proOn)
+                            vis(b.send, proOn)
+                            vis(b.resSV, proOn)
+                            item.isChecked = proOn
+                            true
+                        }
+                        else -> false
+                    }
+                }
+                inflate(R.menu.panel)
+                show()
+                menu.findItem(R.id.ppPro).isChecked = proOn
+            }
         }
-        m.toggling.observe(this, { bool -> Fun.vis(b.recording, !bool) })
+        m.toggling.observe(this, { bool -> vis(b.recording, !bool) })
     }
 
     override fun onResume() {
