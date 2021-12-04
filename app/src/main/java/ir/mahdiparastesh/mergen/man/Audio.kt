@@ -29,11 +29,19 @@ class Audio(p: Panel) : Thread() {
         recorder = AudioRecord(src, sampleRate, chConfig, format, minBufSize)
         recorder!!.startRecording()
         Thread {
+            var repeat = false
             while (active) {
-                sleep(Recorder.FRAME)
-                frames.add(arrayListOf())
-                time++
-                pool.add(frames[time - 1].toByteArray())
+                if (!repeat) {
+                    sleep(Recorder.FRAME)
+                    frames.add(arrayListOf())
+                    time++
+                }
+                repeat = try {
+                    pool.add(frames[time - 1].toByteArray())
+                    false
+                } catch (ignored: ConcurrentModificationException) {
+                    true
+                }
             }
         }.start()
         while (active) {
@@ -44,6 +52,7 @@ class Audio(p: Panel) : Thread() {
     }
 
     fun end() {
+        if (active) return
         active = false
         recorder?.stop()
         recorder?.release()
@@ -51,6 +60,7 @@ class Audio(p: Panel) : Thread() {
     }
 
     override fun interrupt() {
+        end()
         pool.destroy()
         super.interrupt()
     }

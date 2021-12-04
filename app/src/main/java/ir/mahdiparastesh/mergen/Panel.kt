@@ -30,12 +30,12 @@ import ir.mahdiparastesh.mergen.pro.Writer
 // python C:\Users\fulcr\Projects\mergen\main.py
 
 class Panel : AppCompatActivity() {
+    lateinit var m: Model
     private lateinit var b: PanelBinding
     private lateinit var pro: Writer
     private lateinit var man: Controller
     private var anRecording: ObjectAnimator? = null
     private var proOn = false
-    lateinit var m: Model
 
     companion object {
         var handler: Handler? = null

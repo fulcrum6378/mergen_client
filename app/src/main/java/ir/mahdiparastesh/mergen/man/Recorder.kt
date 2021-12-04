@@ -66,7 +66,7 @@ class Recorder(val p: Panel, val view: PreviewView) : ToRecord {
         }
         time++
         object : CountDownTimer(FRAME, FRAME) {
-            override fun onTick(millisUntilFinished: Long) {}
+            override fun onTick(rem: Long) {}
             override fun onFinish() {
                 capture()
             }

@@ -8,12 +8,8 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.Socket
 
-class Connect(val host: MutableLiveData<String>, port: Any) {
-    val portValue = when (port) {
-        is Int -> port
-        is MutableLiveData<*> -> port.value!! as Int
-        else -> throw IllegalArgumentException("Invalid port argument!")
-    }
+class Connect(val host: MutableLiveData<String>, val port: Any) {
+    var portValue = 0
 
     fun send(
         data: ByteArray,
@@ -21,6 +17,11 @@ class Connect(val host: MutableLiveData<String>, port: Any) {
         receive: Boolean = false,
         reportErrors: Boolean = true
     ): String? {
+        portValue = when (port) {
+            is Int -> port
+            is MutableLiveData<*> -> port.value!! as Int
+            else -> throw IllegalArgumentException("Invalid port argument!")
+        }
         var ret: String? = null
         try {
             var socket = Socket(host.value, portValue)
