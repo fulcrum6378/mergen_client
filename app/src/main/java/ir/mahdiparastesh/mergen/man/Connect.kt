@@ -1,14 +1,14 @@
 package ir.mahdiparastesh.mergen.man
 
 import androidx.lifecycle.MutableLiveData
-import ir.mahdiparastesh.mergen.Fun
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.Panel.Companion.handler
+import ir.mahdiparastesh.mergen.otr.UiTools
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.Socket
 
-class Connect(val host: MutableLiveData<String>, val port: Any) {
+class Connect(val host: MutableLiveData<String>, val port: Any, val onSuccess: (String) -> Unit) {
     var portValue = 0
 
     fun send(
@@ -25,10 +25,10 @@ class Connect(val host: MutableLiveData<String>, val port: Any) {
         var ret: String? = null
         try {
             var socket = Socket(host.value, portValue)
-            if (portValue == Controller.port) Controller.succeeded(host.value!!)
+            if (portValue == Controller.port) onSuccess(host.value!!)
             var output = socket.getOutputStream()
             var input = BufferedReader(InputStreamReader(socket.getInputStream()))
-            if (foreword) output.write(Fun.z(data.size.toString()).encodeToByteArray() + data)
+            if (foreword) output.write(UiTools.z(data.size.toString()).encodeToByteArray() + data)
             else output.write(data)
             output.flush()
             if (receive) ret = input.readLine()

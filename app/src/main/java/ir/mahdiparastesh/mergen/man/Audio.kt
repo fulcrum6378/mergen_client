@@ -13,7 +13,7 @@ class Audio(p: Panel) : Thread() {
     private val minBufSize = AudioRecord.getMinBufferSize(sampleRate, chConfig, format) * 2
     private var time = 0
     private val frames = arrayListOf<ArrayList<Byte>>(arrayListOf())
-    var pool = StreamPool(Connect(p.m.host, p.m.audPort))
+    var pool = StreamPool(Connect(p.m.host, p.m.audPort, p.man.onSuccess))
     var active = true
 
     companion object {

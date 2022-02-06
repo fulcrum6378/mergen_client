@@ -1,43 +1,29 @@
 package ir.mahdiparastesh.mergen.pro
 
 import android.os.CountDownTimer
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TextView
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.widget.addTextChangedListener
-import ir.mahdiparastesh.mergen.Fun
-import ir.mahdiparastesh.mergen.Model
 import ir.mahdiparastesh.mergen.Panel
+import ir.mahdiparastesh.mergen.otr.UiTools
+import ir.mahdiparastesh.mergen.otr.UiTools.Companion.vish
 
-class Writer(
-    val that: Panel,
-    val model: Model,
-    val bResponse: TextView,
-    val bResSV: ConstraintLayout,
-    val bSay: EditText,
-    val bSend: ConstraintLayout,
-    val bSendIcon: ImageView,
-    val bSending: ImageView
-) {
+class Writer(val c: Panel) {
     init {
-        model.res.observe(that, { s ->
+        c.m.res.observe(c) { s ->
             resTyper = s
             typer?.cancel()
             typer = null
-            bResponse.text = ""
+            c.b.response.text = ""
             resHider?.cancel()
             resHider = null
-            Fun.fade(bResSV)
+            UiTools.fade(c.b.resSV)
             respond(0)
-        })
-        bSay.typeface = Fun.fRegular
-        bSay.addTextChangedListener { Fun.vish(bSend, it.toString().isNotEmpty()) }
-        bSend.setOnClickListener {
-            if (bSay.text.toString() == "" || Talker.isSending) return@setOnClickListener
-            Talker(that, bSay, model, bSendIcon, bSending)
         }
-        bResponse.typeface = Fun.fBold
+        c.b.say.typeface = c.fRegular
+        c.b.say.addTextChangedListener { c.b.send.vish(it.toString().isNotEmpty()) }
+        c.b.send.setOnClickListener {
+            if (c.b.say.text.toString() != "" && !Talker.isSending) Talker(c)
+        }
+        c.b.response.typeface = c.fBold
     }
 
     companion object {
@@ -53,13 +39,13 @@ class Writer(
             resHider = object : CountDownTimer(resHideAfter, resHideAfter) {
                 override fun onTick(millisUntilFinished: Long) {}
                 override fun onFinish() {
-                    Fun.fade(this@Writer.bResSV, false)
-                    bResponse.text = ""
+                    UiTools.fade(c.b.resSV, false)
+                    c.b.response.text = ""
                 }
             }.start()
             return
         }
-        bResponse.text = bResponse.text.toString().plus(resTyper[which])
+        c.b.response.text = c.b.response.text.toString().plus(resTyper[which])
         typer = object : CountDownTimer(typeDur, typeDur) {
             override fun onTick(millisUntilFinished: Long) {}
             override fun onFinish() {

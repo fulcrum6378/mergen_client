@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:keepScreenOn="true"
     android:layoutDirection="ltr"
-    tools:context="ir.mahdiparastesh.mergen.Panel"
+    tools:context=".Panel"
     tools:ignore="MissingConstraints,ContentDescription">
 
     <androidx.camera.view.PreviewView
@@ -24,6 +24,7 @@
         android:layout_height="wrap_content"
         android:background="@color/CPO"
         android:hint="@string/proHint"
+        android:importantForAutofill="no"
         android:inputType="textMultiLine|textAutoComplete"
         android:letterSpacing="0.03"
         android:maxLength="1000"
@@ -131,7 +132,8 @@
         android:paddingHorizontal="30dp"
         android:paddingVertical="15dp"
         android:weightSum="49"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toBottomOf="parent"
+        tools:ignore="Autofill">
 
         <EditText
             android:id="@+id/address1"

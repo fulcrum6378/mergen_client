@@ -1,4 +1,4 @@
 package ir.mahdiparastesh.mergen.man
 
-class Touch {
-}
+@Suppress("unused")
+class Touch

@@ -2,23 +2,21 @@ package ir.mahdiparastesh.mergen.man
 
 import android.Manifest
 import android.os.CountDownTimer
-import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
-import ir.mahdiparastesh.mergen.Fun.Companion.c
-import ir.mahdiparastesh.mergen.Fun.Companion.permGranted
-import ir.mahdiparastesh.mergen.Fun.Companion.sp
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.R
 import ir.mahdiparastesh.mergen.otr.AlertDialogue
+import ir.mahdiparastesh.mergen.otr.UiTools.Companion.permGranted
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 
-class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
-    private var con = Connect(p.m.host, port)
+class Controller(val p: Panel) : ToRecord {
+    val onSuccess: (String) -> Unit = { succeeded(it) }
+    private var con = Connect(p.m.host, port, onSuccess)
     private var baManifest: ByteArray? = null
-    val rec = Recorder(p, bPreview)
+    val rec = Recorder(p)
     var manifest: DevManifest? = null
     var begun = false
 
@@ -33,17 +31,10 @@ class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
         const val spDeviceId = "device_id"
         val socketErrors = ArrayList<Connect.Error>()
         var socketErrorTimer: CountDownTimer? = null
-
-        fun succeeded(host: String) {
-            sp.edit().apply {
-                putString(spHost, host)
-                apply()
-            }
-        }
     }
 
-    init {
-        c.resources.openRawResource(R.raw.manifest).apply {
+    fun init() {
+        p.resources.openRawResource(R.raw.manifest).apply {
             baManifest = readBytes()
             close()
             manifest = Gson().fromJson(
@@ -52,7 +43,7 @@ class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
             )
         }
 
-        if (!permGranted(audPerm) || !permGranted(visPerm))
+        if (!permGranted(p.c, audPerm) || !permGranted(p.c, visPerm))
             ActivityCompat.requestPermissions(p, arrayOf(audPerm, visPerm), req)
         else permitted()
     }
@@ -69,7 +60,7 @@ class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
     }
 
     fun initialize() {
-        if (!sp.contains(spDeviceId)) acknowledge()
+        if (!p.sp.contains(spDeviceId)) acknowledge()
         val sigInit = con.send(Notify.INIT.s.plus(queryId()), foreword = false, receive = true)
         when {
             sigInit == "false" -> acknowledge()
@@ -80,15 +71,22 @@ class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
         }
     }
 
+    fun succeeded(host: String) {
+        p.sp.edit().apply {
+            putString(spHost, host)
+            apply()
+        }
+    }
+
     fun acknowledge() {
         val sigAckn = con.send(Notify.ACKN.s.plus(baManifest!!), foreword = false, receive = true)
-        if (sigAckn != null) sp.edit().apply {
+        if (sigAckn != null) p.sp.edit().apply {
             putString(spDeviceId, sigAckn)
             apply()
         } else acknowledge()
     }
 
-    fun queryId() = sp.getString(spDeviceId, "")!!.encodeToByteArray()
+    fun queryId() = p.sp.getString(spDeviceId, "")!!.encodeToByteArray()
 
     override fun on() {
         rec.on()
@@ -180,9 +178,9 @@ class Controller(val p: Panel, bPreview: PreviewView) : ToRecord {
         }
         if (socketErrors.isNotEmpty()) AlertDialogue.alertDialogue1(
             p, R.string.recConnectErr, when {
-                wrong -> c.getString(R.string.recAddressErr)
-                unknown != null -> c.getString(R.string.recSocketUnknownErr, unknown, whichSock)
-                conProblem -> c.getString(R.string.recSocketErr, whichSock, whichAddr)
+                wrong -> p.getString(R.string.recAddressErr)
+                unknown != null -> p.getString(R.string.recSocketUnknownErr, unknown, whichSock)
+                conProblem -> p.getString(R.string.recSocketErr, whichSock, whichAddr)
                 else -> "" // LOGICALLY IMPOSSIBLE
             }
         )

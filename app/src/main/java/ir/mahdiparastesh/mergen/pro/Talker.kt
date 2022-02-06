@@ -4,39 +4,29 @@ import android.animation.ObjectAnimator
 import android.net.Uri
 import android.text.TextUtils
 import android.util.Base64
-import android.widget.EditText
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.net.toUri
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
-import ir.mahdiparastesh.mergen.Fun
-import ir.mahdiparastesh.mergen.Fun.Companion.c
-import ir.mahdiparastesh.mergen.Model
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.Panel.Companion.handler
 import ir.mahdiparastesh.mergen.R
 import ir.mahdiparastesh.mergen.otr.AlertDialogue
+import ir.mahdiparastesh.mergen.otr.UiTools
 import java.io.File
 import java.io.FileOutputStream
 import java.util.regex.Pattern
 
-class Talker(
-    val that: Panel,
-    val et: EditText,
-    val model: Model,
-    val bSendIcon: ImageView,
-    val bSending: ImageView,
-    var said: String = et.text.toString()
-) {
+class Talker(val c: Panel) {
+    var said: String = c.b.say.text.toString()
+    var result = true
+
     companion object {
         var isSending = false
         var anSending: ObjectAnimator? = null
     }
-
-    var result = true
 
     init {
         result = true
@@ -51,7 +41,7 @@ class Talker(
                     { res ->
                         sending(false)
                         if (res.startsWith("Traceback "))
-                            AlertDialogue.alertDialogue1(that, R.string.proError, res)
+                            AlertDialogue.alertDialogue1(c, R.string.proError, res)
                         else {
                             val temp = File(c.cacheDir, "response.wav")
                             FileOutputStream(temp).apply {
@@ -62,7 +52,7 @@ class Talker(
                                 ?.sendToTarget()
                             temp.deleteOnExit()
                         }
-                        model.res.value = said
+                        c.m.res.value = said
                     },
                     {
                         sending(false)
@@ -78,9 +68,9 @@ class Talker(
 
     private fun sending(bb: Boolean) {
         isSending = bb
-        et.isEnabled = !bb
-        anSending = Fun.whirl(bSending, if (bb) null else anSending)
-        Fun.drown(bSendIcon, !bb)
+        c.b.say.isEnabled = !bb
+        anSending = UiTools.whirl(c.b.sending, if (bb) null else anSending)
+        UiTools.drown(c.b.sendIcon, !bb)
     }
 
     private fun encode(uriString: String): String {

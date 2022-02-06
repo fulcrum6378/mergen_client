@@ -4,36 +4,36 @@ import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
 import android.media.MediaPlayer
 import android.net.Uri
-import android.os.*
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.get
-import androidx.lifecycle.ViewModelProvider
-import ir.mahdiparastesh.mergen.Fun.Companion.c
-import ir.mahdiparastesh.mergen.Fun.Companion.permResult
-import ir.mahdiparastesh.mergen.Fun.Companion.sp
-import ir.mahdiparastesh.mergen.Fun.Companion.vis
 import ir.mahdiparastesh.mergen.databinding.PanelBinding
 import ir.mahdiparastesh.mergen.man.Connect
 import ir.mahdiparastesh.mergen.man.Controller
+import ir.mahdiparastesh.mergen.otr.BaseActivity
 import ir.mahdiparastesh.mergen.otr.DoubleClickListener
+import ir.mahdiparastesh.mergen.otr.UiTools
+import ir.mahdiparastesh.mergen.otr.UiTools.Companion.permResult
+import ir.mahdiparastesh.mergen.otr.UiTools.Companion.vis
 import ir.mahdiparastesh.mergen.pro.Writer
 
 // adb connect 192.168.1.20:
 // python C:\Users\fulcr\Projects\mergen\main.py
 
-class Panel : AppCompatActivity() {
-    lateinit var m: Model
-    private lateinit var b: PanelBinding
+class Panel : BaseActivity() {
+    lateinit var b: PanelBinding
+    lateinit var man: Controller
     private lateinit var pro: Writer
-    private lateinit var man: Controller
     private var anRecording: ObjectAnimator? = null
     private var proOn = false
 
@@ -45,12 +45,12 @@ class Panel : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = PanelBinding.inflate(layoutInflater)
-        m = ViewModelProvider(this, Model.Factory()).get("Model", Model::class.java)
         setContentView(b.root)
-        Fun.init(this, b.root)
+        man = Controller(this)
+        man.init()
+        pro = Writer(this)
 
 
-        // Handlers
         handler = object : Handler(Looper.getMainLooper()) {
             @Suppress("UNCHECKED_CAST")
             @SuppressLint("SetTextI18n")
@@ -69,11 +69,11 @@ class Panel : AppCompatActivity() {
                     }
                     Action.SOCKET_ERROR.ordinal -> man.socketError(msg.obj as Connect.Error)
                     Action.TOGGLE.ordinal -> {
-                        Fun.shift(
+                        UiTools.shift(
                             b.recording,
                             if (msg.obj as Boolean) R.drawable.indicator_1 else R.drawable.radar
                         )
-                        vis(b.address, !(msg.obj as Boolean))
+                        b.address.vis(!(msg.obj as Boolean))
                     }
                     Action.FORCE_REC.ordinal -> man.rec.begin()
                     Action.WRONG.ordinal -> addrColour(true)
@@ -90,10 +90,6 @@ class Panel : AppCompatActivity() {
                 }
             }
         }
-
-        // INITIALIZATION
-        man = Controller(this, b.preview)
-        pro = Writer(this, m, b.response, b.resSV, b.say, b.send, b.sendIcon, b.sending)
 
         // Connection
         val hint = "127.0.0.1".split(".")
@@ -122,7 +118,7 @@ class Panel : AppCompatActivity() {
                 man.toggle()
             }
         })
-        b.recording.colorFilter = Fun.cf(R.color.CPO)
+        b.recording.colorFilter = cf(R.color.CPO)
         anRecording = ObjectAnimator.ofFloat(b.recording, "rotation", 0f, 360f).apply {
             duration = 522
             interpolator = LinearInterpolator()
@@ -136,9 +132,9 @@ class Panel : AppCompatActivity() {
                     when (item.itemId) {
                         R.id.ppPro -> {
                             proOn = !proOn
-                            vis(b.say, proOn)
-                            vis(b.send, proOn)
-                            vis(b.resSV, proOn)
+                            b.say.vis(proOn)
+                            b.send.vis(proOn)
+                            b.resSV.vis(proOn)
                             item.isChecked = proOn
                             true
                         }
@@ -150,7 +146,7 @@ class Panel : AppCompatActivity() {
                 menu.findItem(R.id.ppPro).isChecked = proOn
             }
         }
-        m.toggling.observe(this, { bool -> vis(b.recording, !bool) })
+        m.toggling.observe(this) { bool -> b.recording.vis(!bool) }
     }
 
     override fun onResume() {
@@ -188,7 +184,7 @@ class Panel : AppCompatActivity() {
     fun addrColour(red: Boolean = false) {
         errColoured = red
         for (x in 0 until b.address.childCount) if (b.address[x] is TextView)
-            (b.address[x] as TextView).setTextColor(Fun.color(if (red) R.color.error else R.color.CS))
+            (b.address[x] as TextView).setTextColor(color(if (red) R.color.error else R.color.CS))
     }
 
     enum class Action {

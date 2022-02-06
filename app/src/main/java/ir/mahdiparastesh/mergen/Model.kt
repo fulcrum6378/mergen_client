@@ -5,12 +5,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 
 class Model : ViewModel() {
-    val res: MutableLiveData<String> by lazy { MutableLiveData<String>() }
-    val host: MutableLiveData<String> by lazy { MutableLiveData<String>("127.0.0.1") }
-    val audPort: MutableLiveData<Int> by lazy { MutableLiveData<Int>(0) }
-    val tocPort: MutableLiveData<Int> by lazy { MutableLiveData<Int>(0) }
-    val visPort: MutableLiveData<Int> by lazy { MutableLiveData<Int>(0) }
-    val toggling: MutableLiveData<Boolean> by lazy { MutableLiveData<Boolean>(false) }
+    val res = MutableLiveData<String>()
+    val host = MutableLiveData("127.0.0.1")
+    val audPort = MutableLiveData(0)
+    val tocPort = MutableLiveData(0)
+    val visPort = MutableLiveData(0)
+    val toggling = MutableLiveData(false)
 
 
     @Suppress("UNCHECKED_CAST")

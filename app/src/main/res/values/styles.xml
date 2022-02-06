@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="match">
         <item name="layout_constraintTop_toTopOf">parent</item>
@@ -21,26 +21,10 @@
         <item name="android:src">@drawable/fake_radius_1</item>
     </style>
 
-    <style name="bnvButton">
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">match_parent</item>
-        <item name="android:background">@drawable/button_1</item>
-        <item name="layout_constraintWidth_percent">0.5</item>
-    </style>
-
-    <style name="bnvButtonIV" parent="match">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">0dp</item>
-        <item name="android:adjustViewBounds">true</item>
-        <item name="layout_constraintBottom_toBottomOf">parent</item>
-        <item name="layout_constraintTop_toTopOf">parent</item>
-        <item name="layout_constraintHeight_percent">0.47</item>
-    </style>
-
     <style name="address">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textSize">25dp</item>
+        <item name="android:textSize" tools:ignore="SpUsage">25dp</item>
         <item name="android:textColor">@color/CS</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAlignment">center</item>
@@ -53,6 +37,7 @@
         <item name="android:maxLength">3</item>
         <item name="android:textColorHint">@color/CSV</item>
         <item name="android:background">@color/TP</item>
+        <item name="android:importantForAutofill">no</item>
     </style>
 
     <style name="addressPoint" parent="address">

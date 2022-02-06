@@ -8,21 +8,17 @@ import android.view.Window
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import ir.mahdiparastesh.mergen.Fun
-import ir.mahdiparastesh.mergen.Fun.Companion.color
 import ir.mahdiparastesh.mergen.R
 
 class AlertDialogue {
     companion object {
         fun alertDialogue1(
-            that: AppCompatActivity, title: Int, message: Any,
+            c: BaseActivity, title: Int, message: Any,
             onOK: DialogInterface.OnClickListener? = null,
-            onCancel: DialogInterface.OnCancelListener? = null,
-            font: Typeface = Fun.fRegular
+            onCancel: DialogInterface.OnCancelListener? = null
         ) {
-            AlertDialog.Builder(that, R.style.alertDialogue1).apply {
+            AlertDialog.Builder(c, R.style.alertDialogue1).apply {
                 setTitle(title)
                 if (message is String) setMessage(message)
                 else if (message is Int) setMessage(message)
@@ -31,45 +27,45 @@ class AlertDialogue {
                 setOnCancelListener(onCancel)
             }.create().apply {
                 show()
-                fixADButton(that, getButton(AlertDialog.BUTTON_POSITIVE), font)
-                fixADTitle(that, window, font)
-                fixADMsg(that, window, font)
+                fixADButton(c, getButton(AlertDialog.BUTTON_POSITIVE))
+                fixADTitle(c, window)
+                fixADMsg(c, window)
             }
         }
 
         fun fixADButton(
-            that: AppCompatActivity, button: Button, font: Typeface, sMargin: Boolean = false
+            c: BaseActivity, button: Button, sMargin: Boolean = false
         ) {
             button.apply {
-                setTextColor(ContextCompat.getColor(that, R.color.CPO))
-                setBackgroundColor(ContextCompat.getColor(that, R.color.CP))
-                typeface = font
-                textSize = that.resources.getDimension(R.dimen.alert1Button) / Fun.dm.density
+                setTextColor(ContextCompat.getColor(c, R.color.CPO))
+                setBackgroundColor(ContextCompat.getColor(c, R.color.CP))
+                typeface = c.fRegular
+                textSize = c.resources.getDimension(R.dimen.alert1Button) / c.dm.density
                 if (sMargin) (layoutParams as ViewGroup.MarginLayoutParams).apply {
                     marginStart = textSize.toInt()
                 }
             }
         }
 
-        fun fixADTitle(that: AppCompatActivity, window: Window?, font: Typeface): TextView? {
+        fun fixADTitle(c: BaseActivity, window: Window?): TextView? {
             var tvTitle = window?.findViewById<TextView>(R.id.alertTitle)
-            tvTitle?.setTypeface(font, Typeface.BOLD)
-            tvTitle?.textSize = that.resources.getDimension(R.dimen.alert1Title) / Fun.dm.density
-            tvTitle?.setTextColor(color(R.color.CP))
+            tvTitle?.setTypeface(c.fRegular, Typeface.BOLD)
+            tvTitle?.textSize = c.resources.getDimension(R.dimen.alert1Title) / c.dm.density
+            tvTitle?.setTextColor(c.color(R.color.CP))
             return tvTitle
         }
 
         fun fixADMsg(
-            that: AppCompatActivity, window: Window?, font: Typeface, linkify: Boolean = false
+            c: BaseActivity, window: Window?, linkify: Boolean = false
         ): TextView? {
             var tvMsg = window?.findViewById<TextView>(android.R.id.message)
-            tvMsg?.typeface = font
+            tvMsg?.typeface = c.fRegular
             tvMsg?.setLineSpacing(
-                that.resources.getDimension(R.dimen.alert1MsgLine) / Fun.dm.density, 0f
+                c.resources.getDimension(R.dimen.alert1MsgLine) / c.dm.density, 0f
             )
-            tvMsg?.textSize = that.resources.getDimension(R.dimen.alert1Msg) / Fun.dm.density
-            tvMsg?.setTextColor(color(R.color.ADTC))
-            tvMsg?.setPadding(Fun.dp(28), Fun.dp(15), Fun.dp(28), Fun.dp(15))
+            tvMsg?.textSize = c.resources.getDimension(R.dimen.alert1Msg) / c.dm.density
+            tvMsg?.setTextColor(c.color(R.color.ADTC))
+            tvMsg?.setPadding(c.dp(28), c.dp(15), c.dp(28), c.dp(15))
             if (tvMsg != null && linkify) Linkify.addLinks(tvMsg, Linkify.ALL)
             return tvMsg
         }

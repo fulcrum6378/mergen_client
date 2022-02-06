@@ -1,72 +1,28 @@
-package ir.mahdiparastesh.mergen
+package ir.mahdiparastesh.mergen.otr
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
-import android.annotation.SuppressLint
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
-import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.util.DisplayMetrics
 import android.view.View
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.widget.ImageView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.security.crypto.EncryptedSharedPreferences
-import androidx.security.crypto.MasterKeys
+import ir.mahdiparastesh.mergen.R
 
-class Fun {
+class UiTools {
     companion object {
-        @SuppressLint("StaticFieldLeak")
-        lateinit var c: Context
-        lateinit var sp: SharedPreferences
-        lateinit var fRegular: Typeface
-        lateinit var fBold: Typeface
-        var dirLtr = true
-        var dm = DisplayMetrics()
-
-
-        fun init(that: AppCompatActivity, root: View) {
-            c = that.applicationContext
-            dm = that.resources.displayMetrics
-            dirLtr = c.resources.getBoolean(R.bool.dirLtr)
-            if (!dirLtr) root.layoutDirection = View.LAYOUT_DIRECTION_RTL
-            sp = EncryptedSharedPreferences.create(
-                "main_prefs", MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC), c,
-                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-            ) // that.getPreferences(Context.MODE_PRIVATE)
-
-            // Fonts
-            fRegular = fonts(Fonts.REGULAR)
-            fBold = fonts(Fonts.BOLD)
+        fun View.vis(b: Boolean = true) {
+            visibility = if (b) View.VISIBLE else View.GONE
         }
 
-        fun color(res: Int) = ContextCompat.getColor(c, res)
-
-        fun drawable(res: Int) = ContextCompat.getDrawable(c, res)
-
-        fun cf(res: Int = R.color.CS) = PorterDuffColorFilter(color(res), PorterDuff.Mode.SRC_IN)
-
-        fun fonts(which: Fonts): Typeface = Typeface.createFromAsset(c.assets, which.path)
-
-        fun dp(px: Int = 0) = (dm.density * px.toFloat()).toInt()
-
-        fun vis(v: View, b: Boolean = true) {
-            v.visibility = if (b) View.VISIBLE else View.GONE
-        }
-
-        fun vish(v: View, b: Boolean = true) {
-            v.visibility = if (b) View.VISIBLE else View.INVISIBLE
+        fun View.vish(b: Boolean = true) {
+            visibility = if (b) View.VISIBLE else View.INVISIBLE
         }
 
         fun shift(v: ImageView, newRes: Int) {
@@ -80,17 +36,17 @@ class Fun {
                 )
                 addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator?) {*/
-                        v.setImageResource(newRes)
-                        /*reverse()
-                        start()
-                    }
-                })
-                start()
-            }*/
+            v.setImageResource(newRes)
+            /*reverse()
+            start()
+        }
+    })
+    start()
+}*/
         }
 
         fun drown(v: View, bb: Boolean = false) {
-            if (bb) vish(v)
+            if (bb) v.vish()
             AnimatorSet().apply {
                 duration = 192
                 interpolator = LinearInterpolator()
@@ -101,7 +57,7 @@ class Fun {
                 )
                 addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator?) {
-                        if (!bb) vish(v, false)
+                        if (!bb) v.vish(false)
                     }
                 })
                 start()
@@ -122,27 +78,28 @@ class Fun {
         }
 
         fun fade(v: View, bb: Boolean = true) {
-            if (bb) vis(v)
+            if (bb) v.vis()
             ObjectAnimator.ofFloat(v, "alpha", if (bb) 1f else 0f).apply {
                 duration = 192
                 addListener(object : AnimatorListenerAdapter() {
                     override fun onAnimationEnd(animation: Animator?) {
-                        if (!bb) vis(v, false)
+                        if (!bb) v.vis(false)
                     }
                 })
                 start()
             }
         }
 
-        fun pieChart(percent: Int = 0, col: Int = color(R.color.CS)) = GradientDrawable().apply {
-            shape = GradientDrawable.OVAL
-            gradientType = GradientDrawable.SWEEP_GRADIENT
-            colors = intArrayOf(
-                col, col, col, col, col, col, col, col, col, col, Color.TRANSPARENT
-            )
-            useLevel = true
-            level = percent * 100
-        }
+        fun pieChart(c: BaseActivity, percent: Int = 0, col: Int = c.color(R.color.CS)) =
+            GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                gradientType = GradientDrawable.SWEEP_GRADIENT
+                colors = intArrayOf(
+                    col, col, col, col, col, col, col, col, col, col, Color.TRANSPARENT
+                )
+                useLevel = true
+                level = percent * 100
+            }
 
         /*fun shake(dur: Long = 78L) {
             //<uses-permission android:name="android.permission.VIBRATE" />
@@ -153,7 +110,7 @@ class Fun {
             else v.vibrate(dur)
         }*/
 
-        fun permGranted(perm: String) =
+        fun permGranted(c: Context, perm: String) =
             ActivityCompat.checkSelfPermission(c, perm) == PackageManager.PERMISSION_GRANTED
 
         fun permResult(grantResults: IntArray) =
