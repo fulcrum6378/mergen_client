@@ -113,9 +113,6 @@ class UiTools {
         fun permGranted(c: Context, perm: String) =
             ActivityCompat.checkSelfPermission(c, perm) == PackageManager.PERMISSION_GRANTED
 
-        fun permResult(grantResults: IntArray) =
-            grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED
-
         fun z(s: String): String {
             var add = ""
             for (x in 0..(9 - s.length)) add += "0"

@@ -7,11 +7,11 @@ android {
     compileSdk 31
 
     defaultConfig {
-        applicationId "ir.mahdiparastesh.mergen"
+        applicationId 'ir.mahdiparastesh.mergen'
         minSdk 29
         targetSdk 31
         versionCode 1
-        versionName '6.3'
+        versionName '6.4'
     }
 
     buildTypes {
@@ -19,18 +19,17 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-        /*debug {
-            applicationIdSuffix ".debug"
-            debuggable true
-        }*/
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
     buildFeatures {
         viewBinding true
     }
@@ -46,9 +45,9 @@ dependencies {
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2'
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'androidx.security:security-crypto:1.0.0'
-    def camerax_version = "1.1.0-beta01"
+    def camerax_version = "1.1.0-beta02"
     implementation "androidx.camera:camera-core:${camerax_version}"
     implementation "androidx.camera:camera-camera2:${camerax_version}"
     implementation "androidx.camera:camera-lifecycle:${camerax_version}"
-    implementation 'androidx.camera:camera-view:1.1.0-beta01'
+    implementation 'androidx.camera:camera-view:1.1.0-beta02'
 }

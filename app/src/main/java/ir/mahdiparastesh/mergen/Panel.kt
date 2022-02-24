@@ -14,6 +14,7 @@ import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.view.get
@@ -23,7 +24,6 @@ import ir.mahdiparastesh.mergen.man.Controller
 import ir.mahdiparastesh.mergen.otr.BaseActivity
 import ir.mahdiparastesh.mergen.otr.DoubleClickListener
 import ir.mahdiparastesh.mergen.otr.UiTools
-import ir.mahdiparastesh.mergen.otr.UiTools.Companion.permResult
 import ir.mahdiparastesh.mergen.otr.UiTools.Companion.vis
 import ir.mahdiparastesh.mergen.pro.Writer
 
@@ -36,6 +36,9 @@ class Panel : BaseActivity() {
     private lateinit var pro: Writer
     private var anRecording: ObjectAnimator? = null
     private var proOn = false
+    val perm = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions -> if (permissions.entries.all { it.value }) man.permitted() }
 
     companion object {
         var handler: Handler? = null
@@ -49,7 +52,6 @@ class Panel : BaseActivity() {
         man = Controller(this)
         man.init()
         pro = Writer(this)
-
 
         handler = object : Handler(Looper.getMainLooper()) {
             @Suppress("UNCHECKED_CAST")
@@ -170,14 +172,6 @@ class Panel : BaseActivity() {
         handler = null
         System.gc()
         super.onDestroy()
-    }
-
-    override fun onRequestPermissionsResult(req: Int, perm: Array<String?>, grant: IntArray) {
-        super.onRequestPermissionsResult(req, perm, grant)
-        val b = permResult(grant)
-        when (req) {
-            Controller.req -> if (b) man.permitted()
-        }
     }
 
     var errColoured = false

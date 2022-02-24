@@ -2,7 +2,6 @@ package ir.mahdiparastesh.mergen.man
 
 import android.Manifest
 import android.os.CountDownTimer
-import androidx.core.app.ActivityCompat
 import com.google.gson.Gson
 import com.google.gson.stream.JsonReader
 import ir.mahdiparastesh.mergen.Panel
@@ -23,7 +22,6 @@ class Controller(val p: Panel) : ToRecord {
     companion object {
         const val audPerm = Manifest.permission.RECORD_AUDIO
         const val visPerm = Manifest.permission.CAMERA
-        const val req = 786
         const val spHost = "host"
         const val socketErrorTO = 1000L
         const val conTimeout = 1500L
@@ -44,7 +42,7 @@ class Controller(val p: Panel) : ToRecord {
         }
 
         if (!permGranted(p.c, audPerm) || !permGranted(p.c, visPerm))
-            ActivityCompat.requestPermissions(p, arrayOf(audPerm, visPerm), req)
+            p.perm.launch(arrayOf(audPerm, visPerm))
         else permitted()
     }
 

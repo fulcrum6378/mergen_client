@@ -8,13 +8,13 @@ import android.graphics.Typeface
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.ComponentActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import ir.mahdiparastesh.mergen.Model
 import ir.mahdiparastesh.mergen.R
 
-abstract class BaseActivity : AppCompatActivity(){
+abstract class BaseActivity : ComponentActivity() {
     lateinit var c: Context
     lateinit var m: Model
     lateinit var sp: SharedPreferences
