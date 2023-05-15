@@ -4,7 +4,7 @@ import android.os.CountDownTimer
 import androidx.core.widget.addTextChangedListener
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.otr.UiTools
-import ir.mahdiparastesh.mergen.otr.UiTools.Companion.vish
+import ir.mahdiparastesh.mergen.otr.UiTools.vish
 
 class Writer(val c: Panel) {
     init {
@@ -18,12 +18,12 @@ class Writer(val c: Panel) {
             UiTools.fade(c.b.resSV)
             respond(0)
         }
-        c.b.say.typeface = c.fRegular
+        c.b.say.typeface = c.font()
         c.b.say.addTextChangedListener { c.b.send.vish(it.toString().isNotEmpty()) }
         c.b.send.setOnClickListener {
             if (c.b.say.text.toString() != "" && !Talker.isSending) Talker(c)
         }
-        c.b.response.typeface = c.fBold
+        c.b.response.typeface = c.font(true)
     }
 
     companion object {

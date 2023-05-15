@@ -3,13 +3,10 @@ package ir.mahdiparastesh.mergen.man
 import android.Manifest
 import android.os.CountDownTimer
 import com.google.gson.Gson
-import com.google.gson.stream.JsonReader
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.R
 import ir.mahdiparastesh.mergen.otr.AlertDialogue
-import ir.mahdiparastesh.mergen.otr.UiTools.Companion.permGranted
-import java.io.ByteArrayInputStream
-import java.io.InputStreamReader
+import ir.mahdiparastesh.mergen.otr.UiTools.permGranted
 
 class Controller(val p: Panel) : ToRecord {
     val onSuccess: (String) -> Unit = { succeeded(it) }
@@ -32,14 +29,10 @@ class Controller(val p: Panel) : ToRecord {
     }
 
     fun init() {
-        p.resources.openRawResource(R.raw.manifest).apply {
-            baManifest = readBytes()
-            close()
-            manifest = Gson().fromJson(
-                JsonReader(InputStreamReader(ByteArrayInputStream(baManifest))),
-                DevManifest::class.java
-            )
-        }
+        baManifest = p.resources.openRawResource(R.raw.manifest).use { it.readBytes() }
+        manifest = Gson().fromJson(
+            baManifest!!.toString(Charsets.UTF_8), DevManifest::class.java
+        )
 
         if (!permGranted(p.c, audPerm) || !permGranted(p.c, visPerm))
             p.perm.launch(arrayOf(audPerm, visPerm))
@@ -65,6 +58,7 @@ class Controller(val p: Panel) : ToRecord {
             sigInit?.startsWith("true") == true -> Panel.handler?.obtainMessage(
                 Panel.Action.PORTS.ordinal, sigInit.substring(4).split(",")
             )?.sendToTarget()
+
             else -> initialize()
         }
     }
@@ -170,6 +164,7 @@ class Controller(val p: Panel) : ToRecord {
             when (e.e) {
                 "java.net.NoRouteToHostException", "java.net.UnknownHostException", "timedOut" ->
                     wrong = true
+
                 "java.net.ConnectException" -> conProblem = true
                 else -> unknown = e.e
             }

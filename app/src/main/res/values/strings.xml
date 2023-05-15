@@ -1,6 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Mergen</string>
-    <string name="ok">OK</string>
+    <string name="app_name">Mergen Client</string>
 
     <!-- Panel Popup -->
     <string name="ppPro">Legacy Pronouncer</string>

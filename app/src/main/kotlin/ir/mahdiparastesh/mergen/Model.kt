@@ -15,7 +15,7 @@ class Model : ViewModel() {
 
     @Suppress("UNCHECKED_CAST")
     class Factory : ViewModelProvider.Factory {
-        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(Model::class.java)) {
                 val key = "Model"
                 return if (hashMapViewModel.containsKey(key)) getViewModel(key) as T

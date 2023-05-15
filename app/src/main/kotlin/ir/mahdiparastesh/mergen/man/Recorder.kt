@@ -11,7 +11,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.Panel.Action
 import ir.mahdiparastesh.mergen.Panel.Companion.handler
-import ir.mahdiparastesh.mergen.otr.UiTools.Companion.vish
+import ir.mahdiparastesh.mergen.otr.UiTools.vish
 import java.io.ByteArrayOutputStream
 
 class Recorder(val p: Panel) : ToRecord {

@@ -10,6 +10,7 @@ import android.os.Looper
 import android.os.Message
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.View
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.widget.TextView
@@ -24,7 +25,7 @@ import ir.mahdiparastesh.mergen.man.Controller
 import ir.mahdiparastesh.mergen.otr.BaseActivity
 import ir.mahdiparastesh.mergen.otr.DoubleClickListener
 import ir.mahdiparastesh.mergen.otr.UiTools
-import ir.mahdiparastesh.mergen.otr.UiTools.Companion.vis
+import ir.mahdiparastesh.mergen.otr.UiTools.vis
 import ir.mahdiparastesh.mergen.pro.Writer
 
 // adb connect 192.168.1.20:
@@ -121,7 +122,9 @@ class Panel : BaseActivity() {
             }
         })
         b.recording.colorFilter = cf(R.color.CPO)
-        anRecording = ObjectAnimator.ofFloat(b.recording, "rotation", 0f, 360f).apply {
+        anRecording = ObjectAnimator.ofFloat(
+            b.recording, View.ROTATION, 0f, 360f
+        ).apply {
             duration = 522
             interpolator = LinearInterpolator()
             repeatCount = Animation.INFINITE
