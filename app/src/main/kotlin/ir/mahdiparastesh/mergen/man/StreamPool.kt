@@ -1,4 +1,4 @@
-package ir.mahdiparastesh.mergen.mem
+package ir.mahdiparastesh.mergen.man
 
 import kotlinx.coroutines.runBlocking
 

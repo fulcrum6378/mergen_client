@@ -1,4 +1,4 @@
-package ir.mahdiparastesh.mergen.mem
+package ir.mahdiparastesh.mergen.man
 
 @Suppress("unused")
 class DevManifest(val os: String, val sensors: List<Sensor>) {

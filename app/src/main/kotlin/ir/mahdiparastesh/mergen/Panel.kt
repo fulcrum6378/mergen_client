@@ -26,8 +26,8 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import ir.mahdiparastesh.mergen.databinding.PanelBinding
-import ir.mahdiparastesh.mergen.mem.Connect
-import ir.mahdiparastesh.mergen.mem.Controller
+import ir.mahdiparastesh.mergen.man.Connect
+import ir.mahdiparastesh.mergen.man.Controller
 
 class Panel : ComponentActivity() {
     val c: Context get() = applicationContext

@@ -1,10 +1,11 @@
-package ir.mahdiparastesh.mergen.mem
+package ir.mahdiparastesh.mergen.man
 
 import android.Manifest
 import android.app.AlertDialog
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.CountDownTimer
+import android.view.WindowManager
 import androidx.core.app.ActivityCompat
 import com.google.gson.Gson
 import ir.mahdiparastesh.mergen.Panel
@@ -176,19 +177,22 @@ class Controller(val p: Panel) : ToRecord {
                 else -> unknown = e.e
             }
         }
-        if (socketErrors.isNotEmpty()) AlertDialog.Builder(p)
-            .setTitle(R.string.recConnectErr).setMessage(
-                when {
-                    wrong -> p.getString(R.string.recAddressErr)
-                    unknown != null -> p.getString(
-                        R.string.recSocketUnknownErr,
-                        unknown,
-                        whichSock
-                    )
-                    conProblem -> p.getString(R.string.recSocketErr, whichSock, whichAddr)
-                    else -> "" // LOGICALLY IMPOSSIBLE
-                }
-            ).show()
+        if (socketErrors.isNotEmpty()) try {
+            AlertDialog.Builder(p)
+                .setTitle(R.string.recConnectErr).setMessage(
+                    when {
+                        wrong -> p.getString(R.string.recAddressErr)
+                        unknown != null -> p.getString(
+                            R.string.recSocketUnknownErr,
+                            unknown,
+                            whichSock
+                        )
+                        conProblem -> p.getString(R.string.recSocketErr, whichSock, whichAddr)
+                        else -> "" // LOGICALLY IMPOSSIBLE
+                    }
+                ).show()
+        } catch (_: WindowManager.BadTokenException) {
+        } // activity not running
         Panel.handler?.obtainMessage(Panel.Action.WRONG.ordinal)?.sendToTarget()
     }
 

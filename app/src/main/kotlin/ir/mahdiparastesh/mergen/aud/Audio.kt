@@ -5,8 +5,8 @@ import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import ir.mahdiparastesh.mergen.Panel
-import ir.mahdiparastesh.mergen.mem.Connect
-import ir.mahdiparastesh.mergen.mem.StreamPool
+import ir.mahdiparastesh.mergen.man.Connect
+import ir.mahdiparastesh.mergen.man.StreamPool
 import java.nio.ByteBuffer
 
 class Audio(p: Panel) : Thread() {

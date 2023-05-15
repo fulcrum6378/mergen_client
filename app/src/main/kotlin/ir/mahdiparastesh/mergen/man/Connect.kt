@@ -1,9 +1,9 @@
-package ir.mahdiparastesh.mergen.mem
+package ir.mahdiparastesh.mergen.man
 
 import androidx.lifecycle.MutableLiveData
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.Panel.Companion.handler
-import ir.mahdiparastesh.mergen.mem.Controller.Companion.z
+import ir.mahdiparastesh.mergen.man.Controller.Companion.z
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.Socket

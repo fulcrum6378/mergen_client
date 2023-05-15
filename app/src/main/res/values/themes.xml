@@ -5,6 +5,7 @@
         <item name="colorPrimary">#F1F6FF</item>
         <item name="colorPrimaryDark">#444</item>
         <item name="colorAccent">#1162ED</item>
+        <item name="android:editTextColor">?colorAccent</item>
         <item name="android:fontFamily">@font/trebuchet</item>
         <item name="android:navigationBarColor">?attr/colorPrimary</item>
         <item name="android:statusBarColor">?attr/colorPrimary</item>
