@@ -1,4 +1,4 @@
-package ir.mahdiparastesh.mergen.man
+package ir.mahdiparastesh.mergen.mem
 
 import android.graphics.Bitmap
 import android.os.CountDownTimer
@@ -7,11 +7,12 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
+import androidx.core.view.isInvisible
 import com.google.common.util.concurrent.ListenableFuture
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.Panel.Action
 import ir.mahdiparastesh.mergen.Panel.Companion.handler
-import ir.mahdiparastesh.mergen.otr.UiTools.vish
+import ir.mahdiparastesh.mergen.aud.Audio
 import java.io.ByteArrayOutputStream
 
 class Recorder(val p: Panel) : ToRecord {
@@ -24,16 +25,14 @@ class Recorder(val p: Panel) : ToRecord {
     var aud: Audio? = null
     var time: Long = 0L
     var pool: StreamPool? = null
-    val size = Size(p.dm.widthPixels, p.dm.heightPixels)
+    val size = Size(p.resources.displayMetrics.widthPixels, p.resources.displayMetrics.heightPixels)
 
-    companion object {
-        const val FRAME = 1000L
-    }
+    val FRAME = 1000L
 
     override fun on() {
         if (!canPreview || previewing) return
         pool = StreamPool(Connect(p.m.host, p.m.visPort, p.man.onSuccess))
-        p.b.preview.vish()
+        p.b.preview.isInvisible = false
         previewing = true
         camProviderFuture = ProcessCameraProvider.getInstance(p.c)
         camProviderFuture.addListener({
@@ -78,7 +77,7 @@ class Recorder(val p: Panel) : ToRecord {
 
     override fun off() {
         if (!previewing || !canPreview) return
-        p.b.preview.vish(false)
+        p.b.preview.isInvisible = true
         previewing = false
         camProvider.unbindAll()
         preview.setSurfaceProvider(null)

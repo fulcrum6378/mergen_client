@@ -2,13 +2,12 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/body"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:keepScreenOn="true"
     android:layoutDirection="ltr"
     tools:context=".Panel"
-    tools:ignore="MissingConstraints,ContentDescription">
+    tools:ignore="ContentDescription,MissingConstraints,LabelFor">
 
     <androidx.camera.view.PreviewView
         android:id="@+id/preview"
@@ -16,88 +15,18 @@
         android:layout_height="0dp"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/say" />
-
-    <EditText
-        android:id="@+id/say"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/CPO"
-        android:hint="@string/proHint"
-        android:importantForAutofill="no"
-        android:inputType="textMultiLine|textAutoComplete"
-        android:letterSpacing="0.03"
-        android:maxLength="1000"
-        android:paddingStart="16dp"
-        android:paddingTop="17dp"
-        android:paddingEnd="68dp"
-        android:paddingBottom="17dp"
-        android:textColor="@color/CS"
-        android:textColorHint="@color/CSV"
-        android:textSize="20sp"
-        android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/send"
-        android:layout_width="46dp"
-        android:layout_height="46dp"
-        android:layout_marginEnd="20dp"
-        android:background="@drawable/hover_1"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@id/say"
-        app:layout_constraintEnd_toEndOf="@id/say"
-        app:layout_constraintTop_toTopOf="@id/say">
-
-        <ImageView
-            android:id="@+id/sendIcon"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="8dp"
-            android:src="@drawable/send_1" />
-
-        <ImageView
-            android:id="@+id/sending"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="6dp"
-            android:scaleX="0"
-            android:scaleY="0"
-            android:src="@drawable/indicator_1"
-            android:visibility="invisible" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/resSV"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent">
-
-        <TextView
-            android:id="@+id/response"
-            style="@style/match"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/response"
-            android:paddingHorizontal="10dp"
-            android:paddingVertical="20dp"
-            android:textAlignment="center"
-            android:textColor="@color/CPO"
-            android:textSize="21sp" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
 
     <ImageView
         style="@style/fakeRadius"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/say" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         style="@style/fakeRadius"
         android:rotation="90"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/say" />
+        app:layout_constraintTop_toTopOf="parent" />
 
 
     <ImageView
@@ -112,21 +41,11 @@
         app:layout_constraintBottom_toTopOf="@id/address"
         app:layout_constraintRight_toRightOf="parent" />
 
-    <ImageView
-        android:id="@+id/recording"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_margin="9dp"
-        android:background="@drawable/round_button_1"
-        android:src="@drawable/radar"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/say" />
-
     <LinearLayout
         android:id="@+id/address"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/CPO"
+        android:background="?colorPrimary"
         android:gravity="center"
         android:orientation="horizontal"
         android:paddingHorizontal="30dp"

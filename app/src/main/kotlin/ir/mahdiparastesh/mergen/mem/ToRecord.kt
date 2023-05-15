@@ -1,4 +1,4 @@
-package ir.mahdiparastesh.mergen.man
+package ir.mahdiparastesh.mergen.mem
 
 interface ToRecord {
     fun on()

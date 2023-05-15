@@ -1,12 +1,14 @@
-package ir.mahdiparastesh.mergen.man
+package ir.mahdiparastesh.mergen.mem
 
 import android.Manifest
+import android.app.AlertDialog
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.CountDownTimer
+import androidx.core.app.ActivityCompat
 import com.google.gson.Gson
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.R
-import ir.mahdiparastesh.mergen.otr.AlertDialogue
-import ir.mahdiparastesh.mergen.otr.UiTools.permGranted
 
 class Controller(val p: Panel) : ToRecord {
     val onSuccess: (String) -> Unit = { succeeded(it) }
@@ -17,8 +19,6 @@ class Controller(val p: Panel) : ToRecord {
     var begun = false
 
     companion object {
-        const val audPerm = Manifest.permission.RECORD_AUDIO
-        const val visPerm = Manifest.permission.CAMERA
         const val spHost = "host"
         const val socketErrorTO = 1000L
         const val conTimeout = 1500L
@@ -26,6 +26,12 @@ class Controller(val p: Panel) : ToRecord {
         const val spDeviceId = "device_id"
         val socketErrors = ArrayList<Connect.Error>()
         var socketErrorTimer: CountDownTimer? = null
+
+        fun z(s: String): String {
+            var add = ""
+            for (x in 0..(9 - s.length)) add += "0"
+            return add + s
+        }
     }
 
     fun init() {
@@ -34,8 +40,9 @@ class Controller(val p: Panel) : ToRecord {
             baManifest!!.toString(Charsets.UTF_8), DevManifest::class.java
         )
 
-        if (!permGranted(p.c, audPerm) || !permGranted(p.c, visPerm))
-            p.perm.launch(arrayOf(audPerm, visPerm))
+        if (!permGranted(p.c, Manifest.permission.RECORD_AUDIO) ||
+            !permGranted(p.c, Manifest.permission.CAMERA)
+        ) p.perm.launch(arrayOf(Manifest.permission.RECORD_AUDIO, Manifest.permission.CAMERA))
         else permitted()
     }
 
@@ -169,16 +176,24 @@ class Controller(val p: Panel) : ToRecord {
                 else -> unknown = e.e
             }
         }
-        if (socketErrors.isNotEmpty()) AlertDialogue.alertDialogue1(
-            p, R.string.recConnectErr, when {
-                wrong -> p.getString(R.string.recAddressErr)
-                unknown != null -> p.getString(R.string.recSocketUnknownErr, unknown, whichSock)
-                conProblem -> p.getString(R.string.recSocketErr, whichSock, whichAddr)
-                else -> "" // LOGICALLY IMPOSSIBLE
-            }
-        )
+        if (socketErrors.isNotEmpty()) AlertDialog.Builder(p)
+            .setTitle(R.string.recConnectErr).setMessage(
+                when {
+                    wrong -> p.getString(R.string.recAddressErr)
+                    unknown != null -> p.getString(
+                        R.string.recSocketUnknownErr,
+                        unknown,
+                        whichSock
+                    )
+                    conProblem -> p.getString(R.string.recSocketErr, whichSock, whichAddr)
+                    else -> "" // LOGICALLY IMPOSSIBLE
+                }
+            ).show()
         Panel.handler?.obtainMessage(Panel.Action.WRONG.ordinal)?.sendToTarget()
     }
+
+    fun permGranted(c: Context, perm: String) =
+        ActivityCompat.checkSelfPermission(c, perm) == PackageManager.PERMISSION_GRANTED
 
 
     enum class Notify(val s: ByteArray) {

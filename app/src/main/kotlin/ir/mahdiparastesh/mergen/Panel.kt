@@ -1,83 +1,73 @@
 package ir.mahdiparastesh.mergen
 
-import android.animation.ObjectAnimator
 import android.annotation.SuppressLint
-import android.media.MediaPlayer
-import android.net.Uri
+import android.content.Context
+import android.content.SharedPreferences
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
+import android.os.SystemClock
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.TypedValue
+import android.view.ContextThemeWrapper
 import android.view.View
-import android.view.animation.Animation
-import android.view.animation.LinearInterpolator
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.view.ContextThemeWrapper
-import androidx.appcompat.widget.PopupMenu
+import androidx.activity.viewModels
+import androidx.annotation.AttrRes
+import androidx.annotation.ColorInt
 import androidx.core.view.get
+import androidx.core.view.isVisible
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import ir.mahdiparastesh.mergen.databinding.PanelBinding
-import ir.mahdiparastesh.mergen.man.Connect
-import ir.mahdiparastesh.mergen.man.Controller
-import ir.mahdiparastesh.mergen.otr.BaseActivity
-import ir.mahdiparastesh.mergen.otr.DoubleClickListener
-import ir.mahdiparastesh.mergen.otr.UiTools
-import ir.mahdiparastesh.mergen.otr.UiTools.vis
-import ir.mahdiparastesh.mergen.pro.Writer
+import ir.mahdiparastesh.mergen.mem.Connect
+import ir.mahdiparastesh.mergen.mem.Controller
 
-// adb connect 192.168.1.20:
-// python C:\Users\fulcr\Projects\mergen\main.py
-
-class Panel : BaseActivity() {
-    lateinit var b: PanelBinding
-    lateinit var man: Controller
-    private lateinit var pro: Writer
-    private var anRecording: ObjectAnimator? = null
-    private var proOn = false
+class Panel : ComponentActivity() {
+    val c: Context get() = applicationContext
+    val b: PanelBinding by lazy { PanelBinding.inflate(layoutInflater) }
+    val m: Model by viewModels()
+    val man: Controller by lazy { Controller(this) }
     val perm = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions -> if (permissions.entries.all { it.value }) man.permitted() }
+    val sp: SharedPreferences by lazy { getPreferences(Context.MODE_PRIVATE) }
 
     companion object {
         var handler: Handler? = null
-        var mp: MediaPlayer? = null
+    }
+
+    class Model : ViewModel() {
+        val host = MutableLiveData("127.0.0.1")
+        val audPort = MutableLiveData(0)
+        val tocPort = MutableLiveData(0)
+        val visPort = MutableLiveData(0)
+        val toggling = MutableLiveData(false)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        b = PanelBinding.inflate(layoutInflater)
         setContentView(b.root)
-        man = Controller(this)
         man.init()
-        pro = Writer(this)
 
         handler = object : Handler(Looper.getMainLooper()) {
             @Suppress("UNCHECKED_CAST")
             @SuppressLint("SetTextI18n")
             override fun handleMessage(msg: Message) {
                 when (msg.what) {
-                    Action.WRITE.ordinal -> msg.obj?.let { b.say.setText("$it") }
-                    Action.TALK.ordinal -> {
-                        mp = MediaPlayer.create(this@Panel, msg.obj as Uri)
-                        mp?.setOnPreparedListener { mp?.start() }
-                        mp?.setOnCompletionListener { mp?.release(); mp = null }
-                    }
                     Action.TOAST.ordinal -> try {
                         Toast.makeText(c, msg.obj as String, Toast.LENGTH_SHORT).show()
                     } catch (ignored: Exception) {
                         Toast.makeText(c, "INVALID MESSAGE", Toast.LENGTH_SHORT).show()
                     }
                     Action.SOCKET_ERROR.ordinal -> man.socketError(msg.obj as Connect.Error)
-                    Action.TOGGLE.ordinal -> {
-                        UiTools.shift(
-                            b.recording,
-                            if (msg.obj as Boolean) R.drawable.indicator_1 else R.drawable.radar
-                        )
-                        b.address.vis(!(msg.obj as Boolean))
-                    }
+                    Action.TOGGLE.ordinal -> b.address.isVisible = !(msg.obj as Boolean)
                     Action.FORCE_REC.ordinal -> man.rec.begin()
                     Action.WRONG.ordinal -> addrColour(true)
                     Action.PORTS.ordinal -> {
@@ -121,37 +111,6 @@ class Panel : BaseActivity() {
                 man.toggle()
             }
         })
-        b.recording.colorFilter = cf(R.color.CPO)
-        anRecording = ObjectAnimator.ofFloat(
-            b.recording, View.ROTATION, 0f, 360f
-        ).apply {
-            duration = 522
-            interpolator = LinearInterpolator()
-            repeatCount = Animation.INFINITE
-            start()
-        }
-        b.recording.setOnClickListener {
-            if (man.begun) return@setOnClickListener
-            PopupMenu(ContextThemeWrapper(c, R.style.Theme_MergenAndroid), it).apply {
-                setOnMenuItemClickListener { item ->
-                    when (item.itemId) {
-                        R.id.ppPro -> {
-                            proOn = !proOn
-                            b.say.vis(proOn)
-                            b.send.vis(proOn)
-                            b.resSV.vis(proOn)
-                            item.isChecked = proOn
-                            true
-                        }
-                        else -> false
-                    }
-                }
-                inflate(R.menu.panel)
-                show()
-                menu.findItem(R.id.ppPro).isChecked = proOn
-            }
-        }
-        m.toggling.observe(this) { bool -> b.recording.vis(!bool) }
     }
 
     override fun onResume() {
@@ -167,13 +126,7 @@ class Panel : BaseActivity() {
 
     override fun onDestroy() {
         man.destroy()
-        try {
-            mp?.release()
-        } catch (ignored: Exception) {
-        }
-        mp = null
         handler = null
-        System.gc()
         super.onDestroy()
     }
 
@@ -181,10 +134,28 @@ class Panel : BaseActivity() {
     fun addrColour(red: Boolean = false) {
         errColoured = red
         for (x in 0 until b.address.childCount) if (b.address[x] is TextView)
-            (b.address[x] as TextView).setTextColor(color(if (red) R.color.error else R.color.CS))
+            (b.address[x] as TextView).setTextColor(
+                if (red) Color.parseColor("#EE0000")
+                else themeColor(android.R.attr.textColor)
+            )
+    }
+
+    @ColorInt
+    fun ContextThemeWrapper.themeColor(@AttrRes attr: Int = android.R.attr.colorAccent) =
+        TypedValue().apply {
+            theme.resolveAttribute(attr, this, true)
+        }.data
+
+    abstract class DoubleClickListener(val span: Long = 500) : View.OnClickListener {
+        private var times: Long = 0
+        abstract fun onDoubleClick()
+        override fun onClick(v: View) {
+            if ((SystemClock.elapsedRealtime() - times) < span) onDoubleClick()
+            times = SystemClock.elapsedRealtime()
+        }
     }
 
     enum class Action {
-        WRITE, TALK, TOAST, SOCKET_ERROR, TOGGLE, FORCE_REC, WRONG, PORTS, TOGGLING_ENDED
+        TOAST, SOCKET_ERROR, TOGGLE, FORCE_REC, WRONG, PORTS, TOGGLING_ENDED
     }
 }

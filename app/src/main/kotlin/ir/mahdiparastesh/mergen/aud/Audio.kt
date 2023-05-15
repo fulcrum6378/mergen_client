@@ -1,10 +1,12 @@
-package ir.mahdiparastesh.mergen.man
+package ir.mahdiparastesh.mergen.aud
 
 import android.annotation.SuppressLint
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import ir.mahdiparastesh.mergen.Panel
+import ir.mahdiparastesh.mergen.mem.Connect
+import ir.mahdiparastesh.mergen.mem.StreamPool
 import java.nio.ByteBuffer
 
 class Audio(p: Panel) : Thread() {
@@ -32,7 +34,7 @@ class Audio(p: Panel) : Thread() {
             var repeat = false
             while (active) {
                 if (!repeat) {
-                    sleep(Recorder.FRAME)
+                    sleep(1000L) // FIXME FRAME
                     frames.add(arrayListOf())
                     time++
                 }

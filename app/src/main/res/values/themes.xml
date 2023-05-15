@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.MergenAndroid" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/CP</item>
-        <item name="colorPrimaryVariant">@color/CPV</item>
-        <item name="colorOnPrimary">@color/CPO</item>
-        <item name="colorSecondary">@color/CS</item>
-        <item name="colorSecondaryVariant">@color/CSV</item>
-        <item name="colorOnSecondary">@color/CSO</item>
-        <item name="android:windowBackground">?attr/colorPrimary</item>
-        <item name="android:statusBarColor">?attr/colorOnPrimary</item>
-        <item name="android:navigationBarColor">?attr/colorOnPrimary</item>
-        <item name="android:windowLightStatusBar">true</item>
+    <style name="Theme.Mergen" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">#F1F6FF</item>
+        <item name="colorPrimaryDark">#444</item>
+        <item name="colorAccent">#1162ED</item>
+        <item name="android:fontFamily">@font/trebuchet</item>
+        <item name="android:navigationBarColor">?attr/colorPrimary</item>
+        <item name="android:statusBarColor">?attr/colorPrimary</item>
+        <item name="android:textColor">?colorAccent</item>
+        <item name="android:textColorHint">#991162ED</item>
+        <item name="android:windowBackground">?attr/colorPrimaryDark</item>
         <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

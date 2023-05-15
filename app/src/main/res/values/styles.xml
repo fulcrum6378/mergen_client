@@ -1,31 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="match">
-        <item name="layout_constraintTop_toTopOf">parent</item>
-        <item name="layout_constraintLeft_toLeftOf">parent</item>
-        <item name="layout_constraintRight_toRightOf">parent</item>
-        <item name="layout_constraintBottom_toBottomOf">parent</item>
-    </style>
-
-    <style name="alertDialogue1" parent="Theme.MaterialComponents.DayNight.Dialog.Alert">
-        <item name="android:background">@color/ADBG</item>
-        <item name="android:textColor">@color/CS</item>
-    </style>
-
-
-    <!-- Panel -->
     <style name="fakeRadius">
         <item name="android:layout_width">20dp</item>
         <item name="android:layout_height">20dp</item>
-        <item name="android:src">@drawable/fake_radius_1</item>
+        <item name="android:src">@drawable/fake_radius</item>
     </style>
 
     <style name="address">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:textSize" tools:ignore="SpUsage">25dp</item>
-        <item name="android:textColor">@color/CS</item>
         <item name="android:textStyle">bold</item>
         <item name="android:textAlignment">center</item>
     </style>
@@ -35,9 +20,8 @@
         <item name="android:inputType">number</item>
         <item name="android:letterSpacing">0.05</item>
         <item name="android:maxLength">3</item>
-        <item name="android:textColorHint">@color/CSV</item>
-        <item name="android:background">@color/TP</item>
-        <item name="android:importantForAutofill">no</item>
+        <item name="android:background">@null</item>
+        <item name="android:textAlignment">center</item>
     </style>
 
     <style name="addressPoint" parent="address">

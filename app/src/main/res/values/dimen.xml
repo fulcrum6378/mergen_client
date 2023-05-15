@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- GLOBAL -->
-    <dimen name="alert1Title">21sp</dimen>
-    <dimen name="alert1Msg">15sp</dimen>
-    <dimen name="alert1MsgLine">75sp</dimen>
-    <dimen name="alert1Button">13sp</dimen>
-</resources>

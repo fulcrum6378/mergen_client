@@ -1,18 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Mergen Client</string>
 
-    <!-- Panel Popup -->
-    <string name="ppPro">Legacy Pronouncer</string>
-    <string name="ppShut">Shut Down</string>
-
-    <!-- rec -->
     <string name="recConnectErr">Connection failed!</string>
     <string name="recAddressErr">Wrong address!</string>
     <string name="recSocketErr">Could not connect to the remote %1$s socket at %2$s!</string>
     <string name="recSocketUnknownErr">%1$s in %2$s socket!</string>
-
-    <!-- pro -->
-    <string name="proError">Traceback</string>
-    <string name="proHint">.....</string>
 </resources>
