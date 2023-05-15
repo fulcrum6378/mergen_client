@@ -6,4 +6,4 @@ dependencyResolutionManagement {
     }
 }
 include ':app'
-rootProject.name = "Mergen Android"
+rootProject.name = 'Mergen Client'
