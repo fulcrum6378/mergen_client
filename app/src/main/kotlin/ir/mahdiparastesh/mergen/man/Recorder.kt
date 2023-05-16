@@ -13,11 +13,13 @@ import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.Panel.Action
 import ir.mahdiparastesh.mergen.Panel.Companion.handler
 import ir.mahdiparastesh.mergen.aud.Audio
+import ir.mahdiparastesh.mergen.man.Controller.Companion.FRAME
 import java.io.ByteArrayOutputStream
 
 class Recorder(val p: Panel) : ToRecord {
-    private lateinit var camProviderFuture: ListenableFuture<ProcessCameraProvider>
-    private lateinit var camProvider: ProcessCameraProvider
+    private val camProviderFuture: ListenableFuture<ProcessCameraProvider>
+            by lazy { ProcessCameraProvider.getInstance(p) }
+    private val camProvider: ProcessCameraProvider by lazy { camProviderFuture.get() }
     private lateinit var preview: Preview
     var canPreview = false
     var previewing = false
@@ -27,22 +29,18 @@ class Recorder(val p: Panel) : ToRecord {
     var pool: StreamPool? = null
     val size = Size(p.resources.displayMetrics.widthPixels, p.resources.displayMetrics.heightPixels)
 
-    val FRAME = 1000L
-
     override fun on() {
         if (!canPreview || previewing) return
         pool = StreamPool(Connect(p.m.host, p.m.visPort, p.man.onSuccess))
         p.b.preview.isInvisible = false
         previewing = true
-        camProviderFuture = ProcessCameraProvider.getInstance(p.c)
         camProviderFuture.addListener({
+            @Suppress("DEPRECATION")
             preview = Preview.Builder()
                 .setTargetResolution(size)
                 .build().also { it.setSurfaceProvider(p.b.preview.surfaceProvider) }
-            camProvider = camProviderFuture.get().also {
-                it.unbindAll()
-                it.bindToLifecycle(p, CameraSelector.DEFAULT_BACK_CAMERA, preview)
-            }
+            camProvider.unbindAll()
+            camProvider.bindToLifecycle(p, CameraSelector.DEFAULT_BACK_CAMERA, preview)
         }, ContextCompat.getMainExecutor(p.c))
     }
 

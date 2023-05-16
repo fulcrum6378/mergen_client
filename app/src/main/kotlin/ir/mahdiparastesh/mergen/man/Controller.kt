@@ -20,6 +20,7 @@ class Controller(val p: Panel) : ToRecord {
     var begun = false
 
     companion object {
+        const val FRAME = 1000L
         const val spHost = "host"
         const val socketErrorTO = 1000L
         const val conTimeout = 1500L
