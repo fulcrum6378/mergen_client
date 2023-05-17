@@ -6,6 +6,7 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.man.Connect
+import ir.mahdiparastesh.mergen.man.Controller.Companion.FRAME
 import ir.mahdiparastesh.mergen.man.StreamPool
 import java.nio.ByteBuffer
 
@@ -34,7 +35,7 @@ class Audio(p: Panel) : Thread() {
             var repeat = false
             while (active) {
                 if (!repeat) {
-                    sleep(1000L) // FIXME FRAME
+                    sleep(FRAME)
                     frames.add(arrayListOf())
                     time++
                 }

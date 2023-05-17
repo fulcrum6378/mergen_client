@@ -10,6 +10,13 @@ import androidx.core.app.ActivityCompat
 import com.google.gson.Gson
 import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.R
+import ir.mahdiparastesh.mergen.vis.Recorder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class Controller(val p: Panel) : ToRecord {
     val onSuccess: (String) -> Unit = { succeeded(it) }
@@ -59,7 +66,7 @@ class Controller(val p: Panel) : ToRecord {
         if (!rec.recording) begin() else end()
     }
 
-    fun initialize() {
+    suspend fun initialize() {
         if (!p.sp.contains(spDeviceId)) acknowledge()
         val sigInit = con.send(Notify.INIT.s.plus(queryId()), foreword = false, receive = true)
         when {
@@ -67,7 +74,6 @@ class Controller(val p: Panel) : ToRecord {
             sigInit?.startsWith("true") == true -> Panel.handler?.obtainMessage(
                 Panel.Action.PORTS.ordinal, sigInit.substring(4).split(",")
             )?.sendToTarget()
-
             else -> initialize()
         }
     }
@@ -79,7 +85,7 @@ class Controller(val p: Panel) : ToRecord {
         }
     }
 
-    fun acknowledge() {
+    suspend fun acknowledge() {
         val sigAckn = con.send(Notify.ACKN.s.plus(baManifest!!), foreword = false, receive = true)
         if (sigAckn != null) p.sp.edit().apply {
             putString(spDeviceId, sigAckn)
@@ -97,22 +103,20 @@ class Controller(val p: Panel) : ToRecord {
         if (begun && rec.recording) return
         begun = true
         var ended = false
-        val run = Thread {
+        val run = CoroutineScope(Dispatchers.IO).async {
             initialize()
             Panel.handler?.obtainMessage(Panel.Action.FORCE_REC.ordinal)?.sendToTarget()
             ended = true
         }
-        object : CountDownTimer(conTimeout, conTimeout) {
-            override fun onTick(millisUntilFinished: Long) {}
-            override fun onFinish() {
-                if (ended) return
-                run.interrupt()
-                Panel.handler?.obtainMessage(
-                    Panel.Action.SOCKET_ERROR.ordinal, Connect.Error("timedOut", port)
-                )?.sendToTarget()
-                p.m.toggling.value = false
-            }
-        }.start()
+        CoroutineScope(Dispatchers.IO).launch {
+            delay(conTimeout)
+            if (ended) return@launch
+            run.cancel()
+            Panel.handler?.obtainMessage(
+                Panel.Action.SOCKET_ERROR.ordinal, Connect.Error("timedOut", port)
+            )?.sendToTarget()
+            withContext(Dispatchers.Main) { p.m.toggling.value = false }
+        }
         run.start()
     }
 
@@ -121,20 +125,20 @@ class Controller(val p: Panel) : ToRecord {
         rec.end()
         p.m.toggling.value = true
 
-        Thread {
+        CoroutineScope(Dispatchers.IO).launch {
             while (rec.pool?.isNotEmpty() == true || rec.aud?.pool?.isNotEmpty() == true)
-                Thread.sleep(500L)
+                delay(500L)
             begun = false
-            Thread { con.send(Notify.HALT.s.plus(queryId()), foreword = false, receive = true) }
-                .start()
+            con.send(Notify.HALT.s.plus(queryId()), foreword = false, receive = true)
             Panel.handler?.obtainMessage(Panel.Action.TOGGLING_ENDED.ordinal)?.sendToTarget()
-        }.start()
+        }
     }
 
     override fun off() {
         rec.off()
-        Thread { con.send(Notify.KILL.s, foreword = false, receive = true, reportErrors = false) }
-            .start()
+        CoroutineScope(Dispatchers.IO).launch {
+            con.send(Notify.KILL.s, foreword = false, receive = true, reportErrors = false)
+        }
     }
 
     override fun destroy() {
@@ -166,14 +170,13 @@ class Controller(val p: Panel) : ToRecord {
             whichSock = when (e.port) {
                 port -> "controller"
                 p.m.audPort.value -> "audio"
-                p.m.tocPort.value -> "touch"
+                p.m.hptPort.value -> "touch"
                 p.m.visPort.value -> "picture"
                 else -> whichSock
             }
             when (e.e) {
                 "java.net.NoRouteToHostException", "java.net.UnknownHostException", "timedOut" ->
                     wrong = true
-
                 "java.net.ConnectException" -> conProblem = true
                 else -> unknown = e.e
             }

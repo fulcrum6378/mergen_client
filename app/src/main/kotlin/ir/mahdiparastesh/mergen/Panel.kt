@@ -46,7 +46,7 @@ class Panel : ComponentActivity() {
     class Model : ViewModel() {
         val host = MutableLiveData("127.0.0.1")
         val audPort = MutableLiveData(0)
-        val tocPort = MutableLiveData(0)
+        val hptPort = MutableLiveData(0)
         val visPort = MutableLiveData(0)
         val toggling = MutableLiveData(false)
     }
@@ -75,7 +75,7 @@ class Panel : ComponentActivity() {
                         val ports = msg.obj as List<String>
                         for (s in man.manifest!!.sensors.indices) when (man.manifest!!.sensors[s].type) {
                             "aud" -> m.audPort.value = ports[s].toInt()
-                            "toc" -> m.tocPort.value = ports[s].toInt()
+                            "hpt" -> m.hptPort.value = ports[s].toInt()
                             "vis" -> m.visPort.value = ports[s].toInt()
                         }
                     }

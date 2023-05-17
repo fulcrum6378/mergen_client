@@ -1,7 +1,6 @@
-package ir.mahdiparastesh.mergen.man
+package ir.mahdiparastesh.mergen.vis
 
 import android.graphics.Bitmap
-import android.os.CountDownTimer
 import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
@@ -13,7 +12,14 @@ import ir.mahdiparastesh.mergen.Panel
 import ir.mahdiparastesh.mergen.Panel.Action
 import ir.mahdiparastesh.mergen.Panel.Companion.handler
 import ir.mahdiparastesh.mergen.aud.Audio
+import ir.mahdiparastesh.mergen.man.Connect
 import ir.mahdiparastesh.mergen.man.Controller.Companion.FRAME
+import ir.mahdiparastesh.mergen.man.StreamPool
+import ir.mahdiparastesh.mergen.man.ToRecord
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 
 class Recorder(val p: Panel) : ToRecord {
@@ -49,22 +55,18 @@ class Recorder(val p: Panel) : ToRecord {
         recording = true
         aud = Audio(p).apply { start() }
         handler?.obtainMessage(Action.TOGGLE.ordinal, true)?.sendToTarget()
-        capture()
+        CoroutineScope(Dispatchers.Main).launch { capture() }
     }
 
-    fun capture() {
+    suspend fun capture() {
         if (!recording) return
         ByteArrayOutputStream().apply {
             p.b.preview.bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, this)
             pool?.add(toByteArray())
         }
         time++
-        object : CountDownTimer(FRAME, FRAME) {
-            override fun onTick(rem: Long) {}
-            override fun onFinish() {
-                capture()
-            }
-        }.start()
+        delay(FRAME)
+        capture()
     }
 
     override fun end() {

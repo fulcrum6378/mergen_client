@@ -11,7 +11,8 @@ import java.net.Socket
 class Connect(val host: MutableLiveData<String>, val port: Any, val onSuccess: (String) -> Unit) {
     var portValue = 0
 
-    fun send(
+    @Suppress("BlockingMethodInNonBlockingContext", "RedundantSuspendModifier")
+    suspend fun send(
         data: ByteArray,
         foreword: Boolean = true,
         receive: Boolean = false,
